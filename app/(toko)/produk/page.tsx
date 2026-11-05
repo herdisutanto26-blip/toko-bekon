@@ -109,6 +109,7 @@ export default function ProdukPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Nama Produk</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Kategori</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Satuan</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">Stok</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Harga Jual</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Varian</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Aksi</th>
@@ -125,6 +126,7 @@ export default function ProdukPage() {
                   <td className="px-4 py-3 text-gray-600">
                     {(p.satuan as Satuan)?.nama ?? "-"}
                   </td>
+                  <td className="px-4 py-3 text-right text-gray-800">{p.stok ?? 0}</td>
                   <td className="px-4 py-3 text-right text-gray-800">{formatRp(p.harga_jual)}</td>
                   <td className="px-4 py-3 text-center">
                     {p.punya_varian ? (
