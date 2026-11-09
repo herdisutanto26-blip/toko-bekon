@@ -96,7 +96,8 @@ export default function BarangForm({
       const table = jual ? "penjualan" : "pembelian";
       const col = jual ? "nomor_nota" : "nomor_po";
       const { data } = await db().from(table).select(col).eq("id", id).maybeSingle();
-      setNomor((data?.[col] as string) ?? "tersimpan");
+      const row = data as Record<string, string> | null;
+      setNomor(row?.[col] ?? "tersimpan");
       setBaris([{ key: String(Date.now()), produk_id: "", qty: "1", harga: "" }]);
       setCatatan("");
     } catch (err) {
