@@ -11,15 +11,13 @@ export async function rpc(fn: string, payload: Record<string, unknown>) {
   return data as string;
 }
 
-type Halaman<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
-
-export async function semua<T>(ambil: (dari: number, sampai: number) => Halaman<T>) {
+export async function semua<T>(ambil: (dari: number, sampai: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<T[]> {
   const ukuran = 1000;
   const rows: T[] = [];
   for (let dari = 0; ; dari += ukuran) {
-    const { data, error } = await ambil(dari, dari + ukuran - 1);
-    if (error) throw new Error(pesanError(error.message));
-    const batch = data ?? [];
+    const hasil = await ambil(dari, dari + ukuran - 1);
+    if (hasil.error) throw new Error(pesanError(hasil.error.message));
+    const batch = (hasil.data ?? []) as T[];
     rows.push(...batch);
     if (batch.length < ukuran) return rows;
   }
