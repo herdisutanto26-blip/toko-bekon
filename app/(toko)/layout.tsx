@@ -169,5 +169,3 @@ export default function TokoLayout({ children }: { children: React.ReactNode }) 
     </AuthProvider>
   );
 }
-
-export type { Peran };
