@@ -38,6 +38,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
     harga_beli: editData?.harga_beli ?? 0,
     harga_jual: editData?.harga_jual ?? 0,
     stok_minimum: editData?.stok_minimum ?? 0,
+    stok: editData?.stok ?? 0,
     punya_varian: editData?.punya_varian ?? false,
     keterangan: editData?.keterangan ?? "",
   });
@@ -71,6 +72,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
       harga_beli: Number(form.harga_beli),
       harga_jual: Number(form.harga_jual),
       stok_minimum: Number(form.stok_minimum),
+      ...(editData ? {} : { stok: Number(form.stok) }),
       punya_varian: form.punya_varian,
       keterangan: form.keterangan || null,
       updated_at: new Date().toISOString(),
@@ -162,7 +164,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Harga Beli</label>
               <input
@@ -188,6 +190,18 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
                 value={form.stok_minimum}
                 onChange={(e) => set("stok_minimum", e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                {editData ? "Stok saat ini" : "Stok awal"}
+              </label>
+              <input
+                type="number"
+                value={form.stok}
+                onChange={(e) => set("stok", e.target.value)}
+                readOnly={!!editData}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 read-only:bg-gray-50"
               />
             </div>
           </div>

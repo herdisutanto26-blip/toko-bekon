@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { semua } from "@/lib/api";
 import type { Produk, KategoriProduk, Satuan } from "@/lib/types";
 import ProdukModal from "./ProdukModal";
 
@@ -22,16 +23,19 @@ export default function ProdukPage() {
   async function fetchData() {
     setLoading(true);
     const toko = supabase.schema("toko");
-    const [{ data: produk }, { data: kategori }, { data: satuan }] =
-      await Promise.all([
-        toko.from("produk")
+    const [produk, { data: kategori }, { data: satuan }] = await Promise.all([
+      semua<Produk>((dari, sampai) =>
+        toko
+          .from("produk")
           .select("*, kategori_produk(id,nama), satuan(id,nama)")
           .eq("aktif", true)
-          .order("nama"),
-        toko.from("kategori_produk").select("*").order("nama"),
-        toko.from("satuan").select("*").order("nama"),
-      ]);
-    setProdukList(produk ?? []);
+          .order("nama")
+          .range(dari, sampai)
+      ),
+      toko.from("kategori_produk").select("*").order("nama"),
+      toko.from("satuan").select("*").order("nama"),
+    ]);
+    setProdukList(produk);
     setKategoriList(kategori ?? []);
     setSatuanList(satuan ?? []);
     setLoading(false);

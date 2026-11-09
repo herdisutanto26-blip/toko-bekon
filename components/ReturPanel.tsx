@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db, rpc } from "@/lib/api";
+import { db, rpc, semua } from "@/lib/api";
 import { formatRp, todayIso } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 
@@ -26,6 +26,39 @@ export default function ReturPanel({ mode }: { mode: "jual" | "beli" }) {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [saving, setSaving] = useState(false);
+  const [riwayat, setRiwayat] = useState<{ id: string; nomor: string; tanggal: string; total: number; nota: string; pihak: string }[]>([]);
+
+  function muatRiwayat() {
+    const tabel = jual ? "retur_penjualan" : "retur_pembelian";
+    const relasi = jual
+      ? "nomor_retur,tanggal,total,penjualan(nomor_nota,pelanggan(nama))"
+      : "nomor_retur,tanggal,total,pembelian(nomor_po,supplier(nama))";
+    semua<Record<string, unknown>>((dari, sampai) =>
+      db().from(tabel).select(`id,${relasi}`).order("tanggal", { ascending: false }).order("id").range(dari, sampai)
+    )
+      .then((data) => setRiwayat(data.map((r) => {
+        const nota = jual
+          ? (r.penjualan as { nomor_nota?: string; pelanggan?: { nama?: string } | null } | null)
+          : (r.pembelian as { nomor_po?: string; supplier?: { nama?: string } | null } | null);
+        const pihak = jual
+          ? (nota as { pelanggan?: { nama?: string } | null } | null)?.pelanggan?.nama
+          : (nota as { supplier?: { nama?: string } | null } | null)?.supplier?.nama;
+        const nomorNota = jual
+          ? (nota as { nomor_nota?: string } | null)?.nomor_nota
+          : (nota as { nomor_po?: string } | null)?.nomor_po;
+        return {
+          id: String(r.id),
+          nomor: String(r.nomor_retur),
+          tanggal: String(r.tanggal),
+          total: Number(r.total),
+          nota: nomorNota ?? "-",
+          pihak: pihak ?? "-",
+        };
+      })))
+      .catch((err: Error) => setError(err.message));
+  }
+
+  useEffect(() => { muatRiwayat(); }, [jual]);
 
   useEffect(() => {
     const table = jual ? "penjualan" : "pembelian";
@@ -86,6 +119,7 @@ export default function ReturPanel({ mode }: { mode: "jual" | "beli" }) {
       });
       setInfo("Retur tersimpan. Stok dan sisa tagihan sudah diperbarui.");
       setNotaId("");
+      muatRiwayat();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan retur");
     } finally {
@@ -153,6 +187,33 @@ export default function ReturPanel({ mode }: { mode: "jual" | "beli" }) {
           {saving ? "Menyimpan..." : "Simpan retur"}
         </button>
       </div>
+      <h2 className="font-semibold text-gray-800 mt-8 mb-3">Riwayat retur</h2>
+      {riwayat.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">Belum ada retur</div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                {["Nomor", "Tanggal", "Nota asal", jual ? "Pelanggan" : "Supplier", "Total"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 font-medium text-gray-600">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {riwayat.map((r) => (
+                <tr key={r.id}>
+                  <td className="px-4 py-3">{r.nomor}</td>
+                  <td className="px-4 py-3">{r.tanggal}</td>
+                  <td className="px-4 py-3">{r.nota}</td>
+                  <td className="px-4 py-3">{r.pihak}</td>
+                  <td className="px-4 py-3">{formatRp(r.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

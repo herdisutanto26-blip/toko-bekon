@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/api";
+import { db, semua } from "@/lib/api";
 import { formatRp, sisaTagihan, todayIso } from "@/lib/format";
 
 export default function DashboardPage() {
@@ -19,9 +19,11 @@ export default function DashboardPage() {
     db().from("penjualan").select("nomor_nota,grand_total").order("created_at", { ascending: false }).limit(5).then(({ data }) => {
       setTerakhir((data ?? []) as { nomor_nota: string; grand_total: number }[]);
     });
-    db().from("produk").select("nama,stok,stok_minimum").eq("aktif", true).then(({ data }) => {
+    semua<{ nama: string; stok: number; stok_minimum: number }>((dari, sampai) =>
+      db().from("produk").select("nama,stok,stok_minimum").eq("aktif", true).order("nama").range(dari, sampai)
+    ).then((data) => {
       setMenipis(
-        ((data ?? []) as { nama: string; stok: number; stok_minimum: number }[])
+        data
           .filter((p) => Number(p.stok) <= Number(p.stok_minimum))
           .slice(0, 8)
           .map((p) => ({ nama: p.nama, stok: Number(p.stok) }))

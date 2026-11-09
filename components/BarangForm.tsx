@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { db, rpc } from "@/lib/api";
+import { db, rpc, semua } from "@/lib/api";
 import { formatRp, todayIso } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 
@@ -38,19 +38,18 @@ export default function BarangForm({
   const [nomor, setNomor] = useState("");
 
   useEffect(() => {
-    db()
-      .from("produk")
-      .select("id,nama,kode_sku,harga_jual,harga_beli,stok")
-      .eq("aktif", true)
-      .order("nama")
-      .then(({ data }) => setProduk((data ?? []) as ProdukRingkas[]));
+    semua<ProdukRingkas>((dari, sampai) =>
+      db()
+        .from("produk")
+        .select("id,nama,kode_sku,harga_jual,harga_beli,stok")
+        .eq("aktif", true)
+        .order("nama")
+        .range(dari, sampai)
+    ).then(setProduk);
     const table = jual ? "pelanggan" : "supplier";
-    db()
-      .from(table)
-      .select("id,nama")
-      .eq("aktif", true)
-      .order("nama")
-      .then(({ data }) => setPihak((data ?? []) as Pihak[]));
+    semua<Pihak>((dari, sampai) =>
+      db().from(table).select("id,nama").eq("aktif", true).order("nama").range(dari, sampai)
+    ).then(setPihak);
   }, [jual]);
 
   const total = useMemo(() => {

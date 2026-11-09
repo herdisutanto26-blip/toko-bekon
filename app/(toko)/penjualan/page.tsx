@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import BarangForm from "@/components/BarangForm";
-import { db } from "@/lib/api";
+import { db, semua } from "@/lib/api";
 import { formatRp, sisaTagihan } from "@/lib/format";
 
 type Row = {
@@ -19,25 +19,30 @@ type Row = {
 
 export default function PenjualanPage() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [cari, setCari] = useState("");
+  const [memuat, setMemuat] = useState(true);
+  const [error, setError] = useState("");
 
   function muat() {
-    db()
-      .from("penjualan")
-      .select("id,nomor_nota,tanggal,grand_total,dibayar,status_bayar,pelanggan(nama),retur_penjualan(total)")
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => setRows((data ?? []) as unknown as Row[]));
+    setMemuat(true);
+    semua<Row>((dari, sampai) =>
+      db()
+        .from("penjualan")
+        .select("id,nomor_nota,tanggal,grand_total,dibayar,status_bayar,pelanggan(nama),retur_penjualan(total)")
+        .order("tanggal", { ascending: false })
+        .order("id")
+        .range(dari, sampai)
+    )
+      .then((data) => { setRows(data); setError(""); })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setMemuat(false));
   }
 
   useEffect(() => { muat(); }, []);
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Penjualan</h1>
-      <BarangForm mode="jual" />
-      <Daftar
-        kosong="Belum ada nota penjualan"
-        rows={rows.map((r) => ({
+  const kata = cari.trim().toLowerCase();
+  const cocok = kata ? rows.filter((r) => (r.pelanggan?.nama ?? "umum").toLowerCase().includes(kata)) : rows.slice(0, 40);
+  const daftar = cocok.slice(0, 200).map((r) => ({
           id: r.id,
           href: `/penjualan/${r.id}`,
           nomor: r.nomor_nota,
@@ -46,8 +51,28 @@ export default function PenjualanPage() {
           total: r.grand_total,
           sisa: sisaTagihan(r.grand_total, r.dibayar, (r.retur_penjualan ?? []).reduce((s, x) => s + Number(x.total), 0)),
           status: r.status_bayar,
-        }))}
+        }));
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Penjualan</h1>
+      <BarangForm mode="jual" />
+      <input
+        type="text"
+        placeholder="Cari pelanggan..."
+        value={cari}
+        onChange={(e) => setCari(e.target.value)}
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-72 mb-4 focus:outline-none focus:ring-2 focus:ring-orange-400"
       />
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      {memuat ? (
+        <p className="text-sm text-gray-500 mb-4">Memuat data...</p>
+      ) : (
+        <>
+          {kata && <p className="text-xs text-gray-400 mb-2">{cocok.length} nota untuk pelanggan ini{cocok.length > 200 ? ", menampilkan 200 pertama" : ""}</p>}
+          <Daftar kosong={kata ? "Tidak ada pelanggan yang cocok" : "Belum ada nota penjualan"} rows={daftar} />
+        </>
+      )}
     </div>
   );
 }

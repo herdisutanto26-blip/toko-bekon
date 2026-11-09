@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db, rpc } from "@/lib/api";
+import { db, rpc, semua } from "@/lib/api";
 import { formatRp, sisaTagihan, todayIso } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 
@@ -21,6 +21,7 @@ export default function Tagihan({ mode }: { mode: "piutang" | "hutang" }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [jumlah, setJumlah] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [memuat, setMemuat] = useState(true);
   const bolehBayar = user?.peran === "admin" || user?.peran === "akunting";
 
   function muat() {
@@ -29,14 +30,18 @@ export default function Tagihan({ mode }: { mode: "piutang" | "hutang" }) {
     const pihak = piutang ? "pelanggan(nama)" : "supplier(nama)";
     const retur = piutang ? "retur_penjualan(total)" : "retur_pembelian(total)";
     const uang = piutang ? "grand_total" : "total";
-    db()
-      .from(table)
-      .select(`id,${nomor},tanggal,${uang},dibayar,${pihak},${retur}`)
-      .order("tanggal", { ascending: false })
-      .limit(100)
-      .then(({ data }) => {
-        const list = ((data ?? []) as Record<string, unknown>[]).map((r) => {
-          const returRows = (r[piutang ? "retur_penjualan" : "retur_pembelian"] as { total: number }[]) ?? [];
+    setMemuat(true);
+    semua<Record<string, unknown>>((dari, sampai) =>
+      db()
+        .from(table)
+        .select(`id,${nomor},tanggal,${uang},dibayar,${pihak},${retur}`)
+        .neq("status_bayar", "lunas")
+        .order("tanggal", { ascending: false })
+        .range(dari, sampai)
+    )
+      .then((data) => {
+        const list = data.map((r) => {
+          const returRows = (r[piutang ? "retur_penjualan" : "retur_pembelian"] as { total: number }[] | null) ?? [];
           const pihakRow = (r[piutang ? "pelanggan" : "supplier"] as { nama: string } | null);
           return {
             id: r.id as string,
@@ -49,7 +54,9 @@ export default function Tagihan({ mode }: { mode: "piutang" | "hutang" }) {
           };
         }).filter((r) => sisaTagihan(r.grand, r.dibayar, r.retur) > 0);
         setRows(list);
-      });
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Gagal memuat tagihan"))
+      .finally(() => setMemuat(false));
   }
 
   useEffect(() => { muat(); }, [piutang]);
@@ -74,7 +81,9 @@ export default function Tagihan({ mode }: { mode: "piutang" | "hutang" }) {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">{piutang ? "Piutang" : "Hutang"}</h1>
       {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
-      {rows.length === 0 ? (
+      {memuat ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">Memuat data...</div>
+      ) : rows.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
           {piutang ? "Belum ada piutang" : "Belum ada hutang"}
         </div>

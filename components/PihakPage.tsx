@@ -1,26 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/api";
+import { db, semua } from "@/lib/api";
 
 type Row = { id: string; nama: string; telepon: string | null; alamat: string | null };
 
 export default function PihakPage({ jenis }: { jenis: "pelanggan" | "supplier" }) {
   const judul = jenis === "pelanggan" ? "Pelanggan" : "Supplier";
   const [rows, setRows] = useState<Row[]>([]);
+  const [cari, setCari] = useState("");
   const [nama, setNama] = useState("");
   const [telepon, setTelepon] = useState("");
   const [alamat, setAlamat] = useState("");
   const [error, setError] = useState("");
 
   function muat() {
-    db().from(jenis).select("id,nama,telepon,alamat").eq("aktif", true).order("nama").then(({ data, error: err }) => {
-      if (err) setError(err.message);
-      setRows((data ?? []) as Row[]);
-    });
+    semua<Row>((dari, sampai) =>
+      db().from(jenis).select("id,nama,telepon,alamat").eq("aktif", true).order("nama").range(dari, sampai)
+    )
+      .then((data) => setRows(data))
+      .catch((err: Error) => setError(err.message));
   }
 
-  useEffect(() => { muat(); }, [jenis]);
+  useEffect(() => {
+    setCari("");
+    muat();
+  }, [jenis]);
+
+  const kata = cari.trim().toLowerCase();
+  const tampil = kata
+    ? rows.filter((r) =>
+        r.nama.toLowerCase().includes(kata) ||
+        (r.telepon ?? "").toLowerCase().includes(kata) ||
+        (r.alamat ?? "").toLowerCase().includes(kata)
+      )
+    : rows;
 
   async function simpan() {
     if (!nama.trim()) return;
@@ -45,8 +59,17 @@ export default function PihakPage({ jenis }: { jenis: "pelanggan" | "supplier" }
         <input value={alamat} onChange={(e) => setAlamat(e.target.value)} placeholder="Alamat" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
         <button onClick={simpan} className="bg-orange-600 text-white rounded-lg text-sm">Simpan</button>
       </div>
+      <input
+        type="text"
+        placeholder="Cari nama, telepon, atau alamat..."
+        value={cari}
+        onChange={(e) => setCari(e.target.value)}
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-72 mb-4 focus:outline-none focus:ring-2 focus:ring-orange-400"
+      />
       {rows.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">Belum ada {judul.toLowerCase()}</div>
+      ) : tampil.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">Tidak ada yang cocok</div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
@@ -58,7 +81,7 @@ export default function PihakPage({ jenis }: { jenis: "pelanggan" | "supplier" }
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {rows.map((r) => (
+              {tampil.map((r) => (
                 <tr key={r.id}>
                   <td className="px-4 py-3">{r.nama}</td>
                   <td className="px-4 py-3">{r.telepon ?? "-"}</td>
