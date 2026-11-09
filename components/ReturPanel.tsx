@@ -68,9 +68,10 @@ export default function ReturPanel({ mode }: { mode: "jual" | "beli" }) {
       .select(`id,${col}`)
       .order("created_at", { ascending: false })
       .limit(50)
-      .then(({ data }) =>
-        setNota((data ?? []).map((r) => ({ id: r.id as string, nomor: r[col] as string })))
-      );
+      .then(({ data }) => {
+        const rows = (data ?? []) as Record<string, string>[];
+        setNota(rows.map((r) => ({ id: r.id, nomor: r[col] })));
+      });
   }, [jual]);
 
   useEffect(() => {
@@ -87,8 +88,8 @@ export default function ReturPanel({ mode }: { mode: "jual" | "beli" }) {
       db().from(returItem).select(`${itemFk},qty`),
     ]).then(([items, retur]) => {
       const sudah = new Map<string, number>();
-      for (const r of retur.data ?? []) {
-        const id = r[itemFk] as string;
+      for (const r of (retur.data ?? []) as Record<string, unknown>[]) {
+        const id = String(r[itemFk] ?? "");
         sudah.set(id, (sudah.get(id) ?? 0) + Number(r.qty));
       }
       setBaris(
