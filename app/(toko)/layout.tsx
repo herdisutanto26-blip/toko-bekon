@@ -12,6 +12,7 @@ const nav: { group: string; items: { href: string; label: string }[] }[] = [
     group: "Transaksi",
     items: [
       { href: "/penjualan", label: "Penjualan" },
+      { href: "/dari-bekon", label: "Dari Bekon" },
       { href: "/retur-penjualan", label: "Retur Penjualan" },
       { href: "/pembelian", label: "Pembelian" },
       { href: "/retur-pembelian", label: "Retur Pembelian" },

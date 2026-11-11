@@ -23,6 +23,9 @@ export function pesanError(message: string) {
   if (/PGRST106|Invalid schema|schema must be/i.test(message)) {
     return "Skema toko belum dibuka di Supabase. Jalankan file supabase/toko.sql, lalu tambahkan toko di Exposed schemas.";
   }
+  if (/daftar_po_toko_bekon|sinkron_penjualan_toko_bekon/i.test(message)) {
+    return "Fungsi tarik PO belum dipasang. Jalankan file supabase/sinkron-po.sql di SQL Editor proyek bekon-pro.";
+  }
   if (/relation .* does not exist|42P01/i.test(message)) {
     return "Tabel toko belum ada. Jalankan file supabase/toko.sql di SQL Editor project bekon-pro.";
   }

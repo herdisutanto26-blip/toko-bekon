@@ -82,6 +82,7 @@ export function useAuth() {
 const akses: Record<string, Peran[]> = {
   "/dashboard": ["admin", "kasir", "pembelian", "akunting"],
   "/penjualan": ["admin", "kasir", "akunting"],
+  "/dari-bekon": ["admin", "akunting"],
   "/retur-penjualan": ["admin", "kasir", "akunting"],
   "/pembelian": ["admin", "pembelian", "akunting"],
   "/retur-pembelian": ["admin", "pembelian", "akunting"],
