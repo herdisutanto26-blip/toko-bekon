@@ -3,46 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AuthProvider, adalahPeranUji, boleh, useAuth } from "@/lib/auth";
-import { db } from "@/lib/api";
-
-const nav: { group: string; items: { href: string; label: string }[] }[] = [
-  { group: "Utama", items: [{ href: "/dashboard", label: "Dashboard" }] },
-  {
-    group: "Transaksi",
-    items: [
-      { href: "/penjualan", label: "Penjualan" },
-      { href: "/dari-bekon", label: "Dari Bekon" },
-      { href: "/retur-penjualan", label: "Retur Penjualan" },
-      { href: "/pembelian", label: "Pembelian" },
-      { href: "/retur-pembelian", label: "Retur Pembelian" },
-    ],
-  },
-  {
-    group: "Keuangan",
-    items: [
-      { href: "/piutang", label: "Piutang" },
-      { href: "/hutang", label: "Hutang" },
-      { href: "/laporan", label: "Laporan" },
-    ],
-  },
-  {
-    group: "Master Data",
-    items: [
-      { href: "/produk", label: "Produk" },
-      { href: "/supplier", label: "Supplier" },
-      { href: "/pelanggan", label: "Pelanggan" },
-      { href: "/master", label: "Kategori & Satuan" },
-      { href: "/hasil-ujian", label: "Hasil Ujian" },
-    ],
-  },
-];
-
-function labelPeran(peran: string) {
-  if (peran === "uji_karyawan") return "Ujian · Karyawan";
-  if (peran === "uji_kepala") return "Ujian · Kepala Toko";
-  return peran;
-}
+import { AuthProvider, adalahPeranUji, boleh, tujuanAwal, useAuth } from "@/lib/auth";
+import { labelPeran, menuToko } from "@/lib/menu";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { ready, user, dbSiap, logout } = useAuth();
@@ -52,8 +14,9 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || !user) return;
-    if (!boleh(user.peran, pathname)) {
-      router.replace(adalahPeranUji(user.peran) ? "/uji" : "/dashboard");
+    if (!boleh(user, pathname)) {
+      const tujuan = tujuanAwal(user);
+      if (tujuan !== pathname && boleh(user, tujuan)) router.replace(tujuan);
     }
   }, [ready, user, pathname, router]);
 
@@ -88,8 +51,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           <span className="font-bold text-lg text-orange-600">Toko Bekon</span>
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-          {nav.map((section) => {
-            const items = section.items.filter((item) => boleh(user.peran, item.href));
+          {menuToko.map((section) => {
+            const items = section.items.filter((item) => boleh(user, item.href));
             if (items.length === 0) return null;
             return (
               <div key={section.group}>
@@ -116,6 +79,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="relative z-20 p-4 pb-6 border-t border-gray-200 text-xs text-gray-500 bg-white">
           <p className="font-medium text-gray-700">{user.nama}</p>
+          <p>@{user.username}</p>
           <p>{labelPeran(user.peran)}</p>
           <button
             type="button"
@@ -140,24 +104,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Login() {
   const { login, dbSiap } = useAuth();
-  const [namaList, setNamaList] = useState<string[]>([]);
-  const [nama, setNama] = useState("Admin");
-  const [pin, setPin] = useState("");
+  const [nama, setNama] = useState("");
+  const [sandi, setSandi] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!dbSiap) return;
-    db()
-      .from("pengguna")
-      .select("nama,peran")
-      .eq("aktif", true)
-      .order("nama")
-      .then(({ data }) => setNamaList((data ?? []).map((r) => r.nama as string)));
-  }, [dbSiap]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const msg = await login(nama, pin);
+    const msg = await login(nama, sandi);
     setError(msg ?? "");
   }
 
@@ -165,34 +118,37 @@ function Login() {
     <div className="min-h-full flex items-center justify-center p-6">
       <form onSubmit={submit} className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-sm">
         <h1 className="text-xl font-bold text-orange-600 mb-1">Toko Bekon</h1>
-        <p className="text-sm text-gray-500 mb-5">Masuk untuk latihan. iPOS 4 tetap catatan yang sah.</p>
+        <p className="text-sm text-gray-500 mb-5">Masuk dengan akun. iPOS 4 tetap catatan yang sah.</p>
         {!dbSiap && (
           <p className="text-sm bg-amber-50 text-amber-800 rounded-lg px-3 py-2 mb-4">
-            Tabel belum ada. Anda tetap bisa masuk dan melihat menu. PIN latihan: 1234 setelah SQL dijalankan.
+            Tabel belum ada. Anda tetap bisa masuk dan melihat menu. Kata sandi latihan: 1234 setelah SQL dijalankan.
           </p>
         )}
-        <label className="block text-xs font-medium text-gray-600 mb-1">Nama</label>
-        {namaList.length > 0 ? (
-          <select value={nama} onChange={(e) => setNama(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3">
-            {namaList.map((n) => (
-              <option key={n}>{n}</option>
-            ))}
-          </select>
-        ) : (
-          <input value={nama} onChange={(e) => setNama(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3" />
-        )}
-        <label className="block text-xs font-medium text-gray-600 mb-1">PIN</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Nama akun</label>
+        <input
+          value={nama}
+          onChange={(e) => setNama(e.target.value)}
+          autoComplete="username"
+          placeholder="admin"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"
+        />
+        <label className="block text-xs font-medium text-gray-600 mb-1">Kata sandi</label>
         <input
           type="password"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
+          value={sandi}
+          onChange={(e) => setSandi(e.target.value)}
+          autoComplete="current-password"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
         />
         {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
         <button className="w-full bg-orange-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-orange-700">
           Masuk
         </button>
-        {dbSiap && <p className="text-xs text-gray-400 mt-3">PIN awal latihan: 1234</p>}
+        {dbSiap && (
+          <p className="text-xs text-gray-400 mt-3">
+            Akun latihan: admin, kasir, pembelian, atau akunting. Kata sandi awal 1234, ganti lewat menu Akses & Akun.
+          </p>
+        )}
       </form>
     </div>
   );

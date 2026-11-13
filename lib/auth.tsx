@@ -3,20 +3,17 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { db, hashPin } from "@/lib/api";
 import { pesanError } from "@/lib/format";
+import { aksesBawaan, menuToko, type Peran } from "@/lib/menu";
 
-export type Peran =
-  | "admin"
-  | "kasir"
-  | "pembelian"
-  | "akunting"
-  | "uji_karyawan"
-  | "uji_kepala";
+export type { Peran };
 
 export type SesiPengguna = {
   id: string;
   nama: string;
+  username: string;
   peran: Peran;
   latihan: boolean;
+  menu_izin: string[] | null;
 };
 
 type AuthState = {
@@ -41,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const raw = sessionStorage.getItem(KEY);
-    const cached = raw ? (JSON.parse(raw) as SesiPengguna) : null;
+    const cached = raw ? normalkanSesi(JSON.parse(raw) as SesiPengguna) : null;
     if (cached) setUser(cached);
 
     db()
@@ -51,21 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(async ({ error }) => {
         setDbSiap(!error);
         if (!error && cached && cached.id !== "latihan") {
-          const { data } = await db()
-            .from("pengguna")
-            .select("id,nama,peran,aktif")
-            .eq("id", cached.id)
-            .maybeSingle();
+          const data = await ambilAkun(cached.id);
           if (!data || data.aktif === false) {
             setUser(null);
             sessionStorage.removeItem(KEY);
           } else {
-            const next: SesiPengguna = {
-              id: data.id,
-              nama: data.nama,
-              peran: data.peran as Peran,
-              latihan: false,
-            };
+            const next = sesiDariBaris(data);
             setUser(next);
             sessionStorage.setItem(KEY, JSON.stringify(next));
           }
@@ -80,21 +68,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else sessionStorage.removeItem(KEY);
   }
 
-  async function login(nama: string, pin: string) {
+  async function login(akun: string, sandi: string) {
+    const kunci = akun.trim();
+    if (!kunci || !sandi) return "Nama akun dan kata sandi wajib diisi";
     if (!dbSiap) {
-      simpan({ id: "latihan", nama: "Admin latihan", peran: "admin", latihan: true });
+      simpan({
+        id: "latihan",
+        nama: "Admin latihan",
+        username: "admin",
+        peran: "admin",
+        latihan: true,
+        menu_izin: null,
+      });
       return null;
     }
-    const { data, error } = await db()
-      .from("pengguna")
-      .select("id,nama,peran")
-      .eq("nama", nama)
-      .eq("pin_hash", await hashPin(pin))
-      .eq("aktif", true)
-      .maybeSingle();
-    if (error) return pesanError(error.message);
-    if (!data) return "Nama atau PIN salah";
-    simpan({ id: data.id, nama: data.nama, peran: data.peran as Peran, latihan: false });
+    const hash = await hashPin(sandi);
+    const ketemu = await cariLogin(kunci, hash);
+    if (ketemu.error) return pesanError(ketemu.error);
+    if (!ketemu.data) return "Nama akun atau kata sandi salah";
+    simpan(sesiDariBaris(ketemu.data));
     return null;
   }
 
@@ -111,29 +103,99 @@ export function useAuth() {
   return ctx;
 }
 
-const akses: Record<string, Peran[]> = {
-  "/uji": ["uji_karyawan", "uji_kepala"],
-  "/dashboard": ["admin", "kasir", "pembelian", "akunting"],
-  "/penjualan": ["admin", "kasir", "akunting"],
-  "/dari-bekon": ["admin", "akunting"],
-  "/retur-penjualan": ["admin", "kasir", "akunting"],
-  "/pembelian": ["admin", "pembelian", "akunting"],
-  "/retur-pembelian": ["admin", "pembelian", "akunting"],
-  "/piutang": ["admin", "kasir", "akunting"],
-  "/hutang": ["admin", "pembelian", "akunting"],
-  "/laporan": ["admin", "akunting"],
-  "/produk": ["admin", "kasir", "pembelian", "akunting"],
-  "/supplier": ["admin", "pembelian"],
-  "/pelanggan": ["admin", "kasir"],
-  "/master": ["admin"],
-  "/hasil-ujian": ["admin"],
+type BarisAkun = {
+  id: string;
+  nama: string;
+  username?: string | null;
+  peran: string;
+  aktif?: boolean;
+  menu_izin?: string[] | null;
 };
 
-export function boleh(peran: Peran, href: string) {
-  if (adalahPeranUji(peran)) {
+function normalkanSesi(sesi: SesiPengguna): SesiPengguna {
+  return {
+    ...sesi,
+    username: sesi.username || sesi.nama,
+    menu_izin: sesi.menu_izin ?? null,
+  };
+}
+
+function sesiDariBaris(data: BarisAkun): SesiPengguna {
+  return {
+    id: data.id,
+    nama: data.nama,
+    username: data.username || data.nama,
+    peran: data.peran as Peran,
+    latihan: false,
+    menu_izin: data.menu_izin ?? null,
+  };
+}
+
+async function ambilAkun(id: string): Promise<BarisAkun | null> {
+  const penuh = await db()
+    .from("pengguna")
+    .select("id,nama,username,peran,aktif,menu_izin")
+    .eq("id", id)
+    .maybeSingle();
+  if (!penuh.error) return penuh.data as BarisAkun | null;
+  if (!/username|menu_izin/i.test(penuh.error.message)) return null;
+  const lama = await db().from("pengguna").select("id,nama,peran,aktif").eq("id", id).maybeSingle();
+  return (lama.data as BarisAkun | null) ?? null;
+}
+
+async function cariLogin(kunci: string, hash: string): Promise<{ data: BarisAkun | null; error: string }> {
+  const penuh = "id,nama,username,peran,menu_izin";
+  const byUser = await db()
+    .from("pengguna")
+    .select(penuh)
+    .eq("username", kunci.toLowerCase())
+    .eq("pin_hash", hash)
+    .eq("aktif", true)
+    .maybeSingle();
+  if (byUser.error && /username|menu_izin/i.test(byUser.error.message)) {
+    const lama = await db()
+      .from("pengguna")
+      .select("id,nama,peran")
+      .ilike("nama", kunci)
+      .eq("pin_hash", hash)
+      .eq("aktif", true)
+      .maybeSingle();
+    if (lama.error) return { data: null, error: lama.error.message };
+    return { data: (lama.data as BarisAkun | null) ?? null, error: "" };
+  }
+  if (byUser.error) return { data: null, error: byUser.error.message };
+  if (byUser.data) return { data: byUser.data as BarisAkun, error: "" };
+
+  const byNama = await db()
+    .from("pengguna")
+    .select(penuh)
+    .ilike("nama", kunci)
+    .eq("pin_hash", hash)
+    .eq("aktif", true)
+    .maybeSingle();
+  if (byNama.error) return { data: null, error: byNama.error.message };
+  return { data: (byNama.data as BarisAkun | null) ?? null, error: "" };
+}
+
+export function boleh(user: SesiPengguna, href: string) {
+  if (adalahPeranUji(user.peran)) {
     return href === "/uji" || href.startsWith("/uji/");
   }
-  const key = Object.keys(akses).find((k) => href === k || href.startsWith(k + "/"));
+  if (user.peran === "admin" && (href === "/akses" || href.startsWith("/akses/"))) return true;
+  if (user.menu_izin) {
+    return user.menu_izin.some((k) => href === k || href.startsWith(k + "/"));
+  }
+  const key = Object.keys(aksesBawaan).find((k) => href === k || href.startsWith(k + "/"));
   if (!key) return true;
-  return akses[key].includes(peran);
+  return aksesBawaan[key].includes(user.peran);
+}
+
+export function tujuanAwal(user: SesiPengguna) {
+  if (adalahPeranUji(user.peran)) return "/uji";
+  for (const section of menuToko) {
+    for (const item of section.items) {
+      if (boleh(user, item.href)) return item.href;
+    }
+  }
+  return "/dashboard";
 }

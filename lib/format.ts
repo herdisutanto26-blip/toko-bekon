@@ -26,6 +26,9 @@ export function pesanError(message: string) {
   if (/daftar_po_toko_bekon|sinkron_penjualan_toko_bekon/i.test(message)) {
     return "Fungsi tarik PO belum dipasang. Jalankan file supabase/sinkron-po.sql di SQL Editor proyek bekon-pro.";
   }
+  if (/username|menu_izin|lowongan|pelamar|karyawan|pelamar_id/i.test(message) && /does not exist|schema cache|42703|PGRST204/i.test(message)) {
+    return "Tabel akses dan SDM belum ada. Jalankan file supabase/sdm-akses.sql di SQL Editor project bekon-pro.";
+  }
   if (/relation .* does not exist|42P01/i.test(message)) {
     return "Tabel toko belum ada. Jalankan file supabase/toko.sql di SQL Editor project bekon-pro.";
   }

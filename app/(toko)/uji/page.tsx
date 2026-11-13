@@ -48,17 +48,33 @@ export default function UjiPage() {
     const skor = soal.filter((s) => jawaban[s.id] === s.benar).length;
     setMenyimpan(true);
     setError("");
-    const { error: err } = await db()
+    let pelamarId: string | null = null;
+    if (user.id !== "latihan") {
+      const cari = await db()
+        .from("pelamar")
+        .select("id")
+        .eq("pengguna_uji_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!cari.error && cari.data) pelamarId = cari.data.id as string;
+    }
+    const dasar = {
+      pengguna_id: user.id === "latihan" ? null : user.id,
+      nama: user.nama,
+      peran: user.peran,
+      paket,
+      skor,
+      total,
+      jawaban,
+    };
+    let { error: err } = await db()
       .from("hasil_ujian")
-      .insert({
-        pengguna_id: user.id === "latihan" ? null : user.id,
-        nama: user.nama,
-        peran: user.peran,
-        paket,
-        skor,
-        total,
-        jawaban,
-      });
+      .insert(pelamarId ? { ...dasar, pelamar_id: pelamarId } : dasar);
+    if (err && pelamarId && /pelamar_id/i.test(err.message)) {
+      const ulang = await db().from("hasil_ujian").insert(dasar);
+      err = ulang.error;
+    }
     setMenyimpan(false);
     if (err) {
       setError(pesanError(err.message));
@@ -74,7 +90,7 @@ export default function UjiPage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Mode ujian</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">{judul}</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Jawab semua soal lalu kirim. Skor akhir hanya tampil di menu Admin.
+          Jawab semua soal lalu kirim. Ini bahan tes untuk lowongan yang Anda lamar. Skor hanya dilihat tim toko di menu Rekrutmen.
         </p>
       </div>
 

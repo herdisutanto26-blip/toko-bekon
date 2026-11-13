@@ -59,8 +59,10 @@ create table if not exists toko.pelanggan (
 create table if not exists toko.pengguna (
   id uuid primary key default gen_random_uuid(),
   nama text not null unique,
+  username text unique,
   peran text not null check (peran in ('admin', 'kasir', 'pembelian', 'akunting', 'uji_karyawan', 'uji_kepala')),
   pin_hash text not null,
+  menu_izin text[],
   aktif boolean not null default true,
   created_at timestamptz not null default now()
 );
