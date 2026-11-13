@@ -124,7 +124,7 @@ begin
   );
 
   for v_item in
-    select material_name, qty_ordered, unit_price
+    select material_name, qty_ordered, unit_price, toko_produk_id
     from public.material_purchase_order_items
     where po_id = p_po_id
     order by sort_order, created_at
@@ -138,14 +138,24 @@ begin
       raise exception 'Harga % belum diisi di PO', v_item.material_name;
     end if;
 
-    select * into v_produk
-    from toko.produk
-    where aktif and lower(trim(nama)) = lower(trim(v_item.material_name))
-    order by created_at
-    limit 1
-    for update;
-    if not found then
-      raise exception 'Barang "%" belum ada di katalog Toko Bekon. Samakan namanya, lalu tarik lagi.', v_item.material_name;
+    if v_item.toko_produk_id is not null then
+      select * into v_produk
+      from toko.produk
+      where id = v_item.toko_produk_id and aktif
+      for update;
+      if not found then
+        raise exception 'Barang toko untuk "%" sudah tidak aktif. Pilih lagi di isi pesanan.', v_item.material_name;
+      end if;
+    else
+      select * into v_produk
+      from toko.produk
+      where aktif and lower(trim(nama)) = lower(trim(v_item.material_name))
+      order by created_at
+      limit 1
+      for update;
+      if not found then
+        raise exception 'Barang "%" belum ada di katalog Toko Bekon. Samakan namanya, lalu tarik lagi.', v_item.material_name;
+      end if;
     end if;
     if v_produk.stok < v_qty then
       raise exception 'Stok % tidak cukup. Sisa %', v_produk.nama, v_produk.stok;
