@@ -66,6 +66,8 @@ declare
   v_produk toko.produk%rowtype;
   v_qty numeric;
   v_harga numeric;
+  v_konv numeric;
+  v_stok numeric;
   v_total numeric := 0;
   v_proyek text;
   v_pengajuan text;
@@ -124,7 +126,7 @@ begin
   );
 
   for v_item in
-    select material_name, qty_ordered, unit_price, toko_produk_id
+    select material_name, qty_ordered, unit_price, unit, toko_produk_id
     from public.material_purchase_order_items
     where po_id = p_po_id
     order by sort_order, created_at
@@ -157,14 +159,29 @@ begin
         raise exception 'Barang "%" belum ada di katalog Toko Bekon. Samakan namanya, lalu tarik lagi.', v_item.material_name;
       end if;
     end if;
-    if v_produk.stok < v_qty then
-      raise exception 'Stok % tidak cukup. Sisa %', v_produk.nama, v_produk.stok;
+    v_konv := null;
+    if v_item.unit is not null and length(trim(v_item.unit)) > 0 then
+      select k.konversi into v_konv
+      from toko.produk_kemasan k
+      where k.produk_id = v_produk.id
+        and lower(k.satuan) = lower(trim(v_item.unit));
+    end if;
+    if v_konv is null or v_konv <= 0 then
+      v_konv := 1;
+    end if;
+    v_stok := round(v_qty * v_konv, 3);
+    if v_produk.stok < v_stok then
+      raise exception 'Stok % tidak cukup. Butuh % dari sisa %', v_produk.nama, v_stok, v_produk.stok;
     end if;
 
     insert into toko.penjualan_item (penjualan_id, produk_id, qty, harga_satuan, harga_beli, subtotal)
-    values (v_id, v_produk.id, v_qty, v_harga, v_produk.harga_beli, round(v_qty * v_harga, 2));
+    values (
+      v_id, v_produk.id, v_qty, v_harga,
+      round(v_produk.harga_beli * v_konv, 2),
+      round(v_qty * v_harga, 2)
+    );
     update toko.produk
-    set stok = stok - v_qty, updated_at = now()
+    set stok = stok - v_stok, updated_at = now()
     where id = v_produk.id;
     v_total := v_total + round(v_qty * v_harga, 2);
   end loop;

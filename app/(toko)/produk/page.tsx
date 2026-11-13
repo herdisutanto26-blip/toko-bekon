@@ -3,11 +3,21 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { semua } from "@/lib/api";
-import type { Produk, KategoriProduk, Satuan } from "@/lib/types";
+import type { Produk, ProdukKemasan, KategoriProduk, Satuan } from "@/lib/types";
 import ProdukModal from "./ProdukModal";
 
 function formatRp(n: number) {
-  return "Rp " + n.toLocaleString("id-ID");
+  return "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
+}
+
+function kemasanUrut(p: Produk): ProdukKemasan[] {
+  const daftar = p.kemasan ?? [];
+  const stok = (p.satuan as Satuan | undefined)?.nama?.toLowerCase() ?? "";
+  return [...daftar].sort((a, b) => {
+    const au = a.satuan.toLowerCase() === stok ? 0 : 1;
+    const bu = b.satuan.toLowerCase() === stok ? 0 : 1;
+    return au - bu || a.satuan.localeCompare(b.satuan, "id");
+  });
 }
 
 export default function ProdukPage() {
@@ -35,7 +45,25 @@ export default function ProdukPage() {
       toko.from("kategori_produk").select("*").order("nama"),
       toko.from("satuan").select("*").order("nama"),
     ]);
-    setProdukList(produk);
+    let kemasan: ProdukKemasan[] = [];
+    try {
+      kemasan = await semua<ProdukKemasan>((dari, sampai) =>
+        toko
+          .from("produk_kemasan")
+          .select("id, produk_id, satuan, harga_jual, konversi")
+          .order("produk_id")
+          .range(dari, sampai)
+      );
+    } catch {
+      kemasan = [];
+    }
+    const grup = new Map<string, ProdukKemasan[]>();
+    for (const baris of kemasan) {
+      const daftar = grup.get(baris.produk_id) ?? [];
+      daftar.push(baris);
+      grup.set(baris.produk_id, daftar);
+    }
+    setProdukList(produk.map((p) => ({ ...p, kemasan: grup.get(p.id) ?? [] })));
     setKategoriList(kategori ?? []);
     setSatuanList(satuan ?? []);
     setLoading(false);
@@ -128,10 +156,24 @@ export default function ProdukPage() {
                     {(p.kategori_produk as KategoriProduk)?.nama ?? "-"}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {(p.satuan as Satuan)?.nama ?? "-"}
+                    {kemasanUrut(p).length > 1
+                      ? kemasanUrut(p).map((k) => k.satuan).join(", ")
+                      : (p.satuan as Satuan)?.nama ?? "-"}
                   </td>
                   <td className="px-4 py-3 text-right text-gray-800">{p.stok ?? 0}</td>
-                  <td className="px-4 py-3 text-right text-gray-800">{formatRp(p.harga_jual)}</td>
+                  <td className="px-4 py-3 text-right text-gray-800">
+                    {kemasanUrut(p).length > 1 ? (
+                      <div className="space-y-0.5">
+                        {kemasanUrut(p).map((k) => (
+                          <div key={k.id}>
+                            {k.satuan} · {formatRp(k.harga_jual)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      formatRp(p.harga_jual)
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     {p.punya_varian ? (
                       <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">Ya</span>

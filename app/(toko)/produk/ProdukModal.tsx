@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Produk, KategoriProduk, Satuan } from "@/lib/types";
+import type { Produk, ProdukKemasan, KategoriProduk, Satuan } from "@/lib/types";
 
 async function generateSKU(kategoriId: string, kategoriList: KategoriProduk[]): Promise<string> {
   const kategori = kategoriList.find((k) => k.id === kategoriId);
@@ -205,6 +205,31 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               />
             </div>
           </div>
+
+          {(editData?.kemasan?.length ?? 0) > 1 && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+              <p className="text-xs font-medium text-orange-950 mb-1">Harga jual per kemasan</p>
+              <ul className="text-sm text-gray-800 space-y-0.5">
+                {[...(editData?.kemasan ?? [])]
+                  .sort((a: ProdukKemasan, b: ProdukKemasan) => {
+                    const stok = satuanList.find((s) => s.id === form.satuan_id)?.nama.toLowerCase() ?? "";
+                    const rank = (satuan: string) => (satuan.toLowerCase() === stok ? 0 : 1);
+                    return rank(a.satuan) - rank(b.satuan) || a.satuan.localeCompare(b.satuan, "id");
+                  })
+                  .map((k) => (
+                    <li key={k.id}>
+                      {k.satuan} · Rp {Math.round(Number(k.harga_jual) || 0).toLocaleString("id-ID")}
+                      {k.konversi != null && Number(k.konversi) !== 1
+                        ? ` · 1 ${k.satuan} = ${Number(k.konversi).toLocaleString("id-ID")} satuan stok`
+                        : ""}
+                    </li>
+                  ))}
+              </ul>
+              <p className="text-[11px] text-orange-900 mt-1">
+                Harga jual di atas adalah harga satuan stok. Stok gudang tetap di satuan itu.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Keterangan</label>

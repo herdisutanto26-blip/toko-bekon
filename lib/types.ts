@@ -28,6 +28,15 @@ export type Produk = {
   kategori_produk?: KategoriProduk;
   satuan?: Satuan;
   stok?: number;
+  kemasan?: ProdukKemasan[];
+};
+
+export type ProdukKemasan = {
+  id: string;
+  produk_id: string;
+  satuan: string;
+  harga_jual: number;
+  konversi: number | null;
 };
 
 export type ProdukVarian = {
