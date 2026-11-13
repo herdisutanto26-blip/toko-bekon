@@ -68,9 +68,9 @@ export default function UjiPage() {
       total,
       jawaban,
     };
-    let { error: err } = await db()
-      .from("hasil_ujian")
-      .insert(pelamarId ? { ...dasar, pelamar_id: pelamarId } : dasar);
+    const baris: typeof dasar & { pelamar_id?: string } = { ...dasar };
+    if (pelamarId) baris.pelamar_id = pelamarId;
+    let { error: err } = await db().from("hasil_ujian").insert(baris);
     if (err && pelamarId && /pelamar_id/i.test(err.message)) {
       const ulang = await db().from("hasil_ujian").insert(dasar);
       err = ulang.error;
