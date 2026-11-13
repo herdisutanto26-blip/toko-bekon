@@ -18,564 +18,401 @@ export const soalUjian: Record<PaketUji, SoalUjian[]> = {
     {
       id: "k1",
       pertanyaan:
-        "Pelanggan membawa uang pas Rp100.000 untuk belanja Rp87.500, lalu segera pergi sambil bilang 'kembaliannya nanti saja'. Tindakan paling tepat?",
-      opsi: [
-        "Simpan uang 100.000 di laci dan catat hutang kembalian di kertas pribadi",
-        "Tolak transaksi sampai kembalian bisa diselesaikan di tempat, atau minta pelanggan menunggu sebentar",
-        "Ambil kembalian dari uang pribadi agar cepat selesai",
-        "Anggap pelanggan mengikhlaskan Rp12.500 sebagai tip",
-      ],
+        "Pelanggan belanja Rp87.500 dan bayar Rp100.000. Berapa kembalian yang benar?",
+      opsi: ["Rp11.500", "Rp12.500", "Rp13.500", "Rp22.500"],
       benar: 1,
-      pembahasan:
-        "Kembalian adalah hak pelanggan dan bagian dari kas toko. Tidak boleh ditunda tanpa prosedur resmi atau diganti uang pribadi.",
+      pembahasan: "100.000 − 87.500 = 12.500.",
     },
     {
       id: "k2",
       pertanyaan:
-        "Dua pelanggan datang hampir bersamaan: satu sudah di kasir, satu bertanya stok di lorong. Anda sendirian. Prioritas yang paling benar?",
-      opsi: [
-        "Tinggalkan kasir untuk bantu pencarian stok agar terlihat ramah",
-        "Selesaikan transaksi di kasir dulu, sambil memberitahu pelanggan lorong bahwa Anda segera membantu",
-        "Minta pelanggan kasir menunggu tanpa penjelasan lalu ke lorong",
-        "Abaikan keduanya sampai ada rekan datang",
-      ],
-      benar: 1,
-      pembahasan:
-        "Kasir yang sedang transaksi tidak boleh ditinggalkan. Komunikasi singkat ke pelanggan lain menjaga antrean dan keamanan kas.",
+        "Tiga item: Rp15.000, Rp22.500, dan Rp8.000. Ada diskon nota Rp5.000. Total bayar pelanggan?",
+      opsi: ["Rp40.500", "Rp45.500", "Rp50.500", "Rp35.500"],
+      benar: 0,
+      pembahasan: "(15.000 + 22.500 + 8.000) − 5.000 = 40.500.",
     },
     {
       id: "k3",
       pertanyaan:
-        "Harga di sistem Rp45.000, label rak Rp42.000. Pelanggan menuntut harga label. Kebijakan paling aman sebelum ada SOP tertulis dari atasan?",
-      opsi: [
-        "Langsung jual Rp42.000 tanpa lapor siapa pun",
-        "Paksakan Rp45.000 meski pelanggan marah",
-        "Tahan transaksi, konfirmasi ke kepala toko, lalu ikuti keputusan resmi",
-        "Jual Rp42.000 dan ubah harga master sendiri agar cocok",
-      ],
-      benar: 2,
-      pembahasan:
-        "Selisih harga adalah isu kebijakan. Keputusan harus dari atasan agar konsisten dan terdokumentasi.",
+        "Harga satuan Rp12.000. Pelanggan ambil 7 pcs dengan diskon 10% dari subtotal. Berapa yang dibayar?",
+      opsi: ["Rp75.600", "Rp84.000", "Rp70.000", "Rp76.800"],
+      benar: 0,
+      pembahasan: "Subtotal 84.000; diskon 10% = 8.400; bayar 75.600.",
     },
     {
       id: "k4",
       pertanyaan:
-        "Pelanggan minta nota 'lebih besar dari harga sebenarnya' untuk keperluan klaim kantor. Respons yang benar?",
-      opsi: [
-        "Boleh, asal pelanggan bayar selisihnya diam-diam",
-        "Tolak, karena memalsukan nilai nota adalah pelanggaran dan berisiko hukum",
-        "Setuju jika pelanggan langganan lama",
-        "Buat dua nota: satu asli satu palsu",
-      ],
-      benar: 1,
-      pembahasan:
-        "Nota harus mencerminkan transaksi nyata. Memalsukan nilai melanggar integritas dan bisa berakibat hukum.",
+        "Uang di laci awal Rp200.000. Penjualan tunai Rp350.000. Pengeluaran resmi Rp25.000. Kas akhir seharusnya?",
+      opsi: ["Rp525.000", "Rp550.000", "Rp575.000", "Rp500.000"],
+      benar: 0,
+      pembahasan: "200.000 + 350.000 − 25.000 = 525.000.",
     },
     {
       id: "k5",
       pertanyaan:
-        "Saat hitung uang di laci, ada kelebihan Rp20.000 yang tidak jelas asal-usulnya. Langkah benar?",
-      opsi: [
-        "Bagi ke karyawan yang sedang shift",
-        "Simpan di saku dulu, nanti dikembalikan jika ada yang klaim",
-        "Laporkan ke kepala toko dan catat sebagai selisih/lebih kas sesuai prosedur",
-        "Campur ke kas berikutnya tanpa catatan",
-      ],
-      benar: 2,
-      pembahasan:
-        "Kelebihan kas sama pentingnya dengan kekurangan: harus dilaporkan dan dicatat, bukan diambil pribadi.",
+        "Pelanggan bayar Rp50.000 untuk belanja Rp47.800. Anda salah kasih kembalian Rp3.200. Selisih kas toko menjadi?",
+      opsi: ["Lebih Rp1.000", "Kurang Rp1.000", "Lebih Rp2.200", "Kurang Rp2.200"],
+      benar: 1,
+      pembahasan: "Kembalian benar Rp2.200; dikasih Rp3.200 → kas kurang Rp1.000.",
     },
     {
       id: "k6",
       pertanyaan:
-        "Barang pecah belah jatuh dan retak saat Anda menata rak. Belum ada pelanggan yang melihat. Apa yang harus dilakukan?",
-      opsi: [
-        "Rapikan diam-diam dan tetap jual dengan harga normal",
-        "Buang ke tempat sampah tanpa laporan agar tidak kena teguran",
-        "Pisahkan barang rusak, laporkan, dan jangan dijual sebagai barang baik",
-        "Turunkan harga sendiri tanpa izin lalu jual cepat",
-      ],
-      benar: 2,
-      pembahasan:
-        "Barang rusak adalah kerugian yang harus tercatat. Menjual barang cacat tanpa info merugikan pelanggan dan toko.",
+        "Stok awal 40. Masuk 25. Keluar terjual 48. Stok akhir seharusnya?",
+      opsi: ["15", "17", "23", "13"],
+      benar: 1,
+      pembahasan: "40 + 25 − 48 = 17.",
     },
     {
       id: "k7",
       pertanyaan:
-        "Pelanggan marah karena antre lama, lalu memaki Anda di depan umum. Respons profesional terbaik?",
-      opsi: [
-        "Membalas dengan nada yang sama agar tidak dianggap lemah",
-        "Tetap tenang, minta maaf atas menunggu, fokus selesaikan kebutuhan dengan sopan, eskalasi jika mengancam",
-        "Menutup kasir dan pergi ke belakang tanpa bicara",
-        "Menawarkan diskon besar tanpa wewenang agar diam",
-      ],
-      benar: 1,
-      pembahasan:
-        "Emosi pelanggan ditangani dengan tenang dan prosedur. Diskon atau balas dendam bukan solusi wewenang karyawan.",
+        "Item dijual Rp35.000. Modal/HPP Rp28.000. Margin kotor per unit berapa persen dari harga jual?",
+      opsi: ["20%", "25%", "18%", "22%"],
+      benar: 0,
+      pembahasan: "(35.000 − 28.000) / 35.000 = 20%.",
     },
     {
       id: "k8",
       pertanyaan:
-        "Teman kerja minta Anda 'tutup mata' saat dia membawa pulang sedikit baut/paku sisa tanpa dicatat. Sikap benar?",
-      opsi: [
-        "Boleh, karena nilainya kecil",
-        "Tolak dan ingatkan bahwa pengambilan tanpa prosedur adalah pelanggaran, laporkan jika berulang",
-        "Minta bagian juga agar adil",
-        "Catat di buku pribadi saja tanpa sepengetahuan toko",
-      ],
-      benar: 1,
-      pembahasan:
-        "Pengambilan barang tanpa prosedur adalah pencurian stok, terlepas dari nilai kecil.",
+        "Promo beli 3 gratis 1 berlaku untuk item seharga Rp10.000. Pelanggan ambil 4 unit. Total bayar?",
+      opsi: ["Rp30.000", "Rp40.000", "Rp20.000", "Rp35.000"],
+      benar: 0,
+      pembahasan: "Bayar 3 unit, 1 gratis → 30.000.",
     },
     {
       id: "k9",
       pertanyaan:
-        "Pelanggan sudah bayar, lalu 10 menit kemudian mengaku kurang dapat 1 item. Nota menunjukkan item itu sudah tertera. Langkah terbaik?",
+        "Pelanggan minta nota lebih besar dari nilai asli untuk klaim kantor. Sikap yang benar?",
       opsi: [
-        "Langsung berikan barang tambahan tanpa cek",
-        "Tuduh pelanggan berbohong di depan antrean",
-        "Cek nota, cek rekaman/saksi/isi tas belanja bila memungkinkan, lalu putuskan sesuai bukti dan SOP",
-        "Suruh pelanggan beli lagi karena sudah keluar kasir",
+        "Tolak karena nilai nota harus sama dengan transaksi nyata",
+        "Setujui jika pelanggan menambah bayar selisihnya",
+        "Buat dua nota berbeda untuk keperluan masing-masing",
+        "Setujui hanya untuk pelanggan langganan lama",
       ],
-      benar: 2,
-      pembahasan:
-        "Klaim kekurangan dicek berbasis bukti dan SOP, bukan langsung menuduh atau memberi barang tanpa verifikasi.",
+      benar: 0,
+      pembahasan: "Memalsukan nilai nota melanggar integritas dan berisiko hukum.",
     },
     {
       id: "k10",
       pertanyaan:
-        "Anda diminta menutup shift, tetapi belum sempat mencocokkan kas dengan rekap penjualan. Apa yang seharusnya terjadi?",
+        "Harga sistem Rp45.000, label rak Rp42.000. Tindakan paling tepat sebelum ada keputusan atasan?",
       opsi: [
-        "Langsung pulang dan cocokkan besok saja",
-        "Serahkan laci ke shift berikutnya tanpa serah terima tertulis",
-        "Selesaikan hitung kas dan serah terima sesuai checklist sebelum meninggalkan tanggung jawab",
-        "Tanya pelanggan terakhir berapa total belanja untuk perkiraan kas",
+        "Tahan transaksi dan minta keputusan kepala toko",
+        "Langsung jual Rp42.000 tanpa konfirmasi",
+        "Paksakan Rp45.000 meski pelanggan protes",
+        "Ubah harga master sendiri agar cocok label",
       ],
-      benar: 2,
-      pembahasan:
-        "Serah terima kas adalah titik kritis. Meninggalkan tanpa cocok = risiko selisih tidak tertelusur.",
+      benar: 0,
+      pembahasan: "Selisih harga adalah keputusan kebijakan, bukan inisiatif kasir sendiri.",
     },
     {
       id: "k11",
       pertanyaan:
-        "Pelanggan kredit meminta tambah belanja padahal limit/jatuh tempo bermasalah menurut catatan toko. Karyawan sebaiknya?",
+        "Anda input qty 10 padahal 1, pelanggan sudah pergi. Langkah pertama yang benar?",
       opsi: [
-        "Tetap jual karena pelanggan 'pasti bayar'",
-        "Tahan dulu, konfirmasi kebijakan kredit ke kepala toko sebelum menambah piutang",
-        "Naikkan limit sendiri agar pelanggan senang",
-        "Hapus catatan jatuh tempo lama agar bisa transaksi",
+        "Laporkan untuk koreksi resmi sesuai SOP",
+        "Diamkan agar tidak kena teguran",
+        "Buat penjualan fiktif untuk menutup selisih",
+        "Kurangi stok rak manual tanpa catatan",
       ],
-      benar: 1,
-      pembahasan:
-        "Keputusan kredit adalah kebijakan manajemen. Karyawan tidak boleh menambah risiko piutang sendiri.",
+      benar: 0,
+      pembahasan: "Kesalahan qty memengaruhi stok dan keuangan; harus dikoreksi resmi.",
     },
     {
       id: "k12",
       pertanyaan:
-        "Saat input penjualan, Anda salah ketik qty 10 padahal 1, dan pelanggan sudah pergi dengan struk. Langkah pertama yang benar?",
+        "Rekan minta PIN Anda karena 'kasir error'. Respons paling tepat?",
       opsi: [
-        "Buat penjualan negatif sembarangan tanpa prosedur",
-        "Diamkan agar tidak kena teguran",
-        "Segera laporkan ke atasan untuk koreksi resmi (retur/void sesuai SOP) dan hubungi pelanggan bila perlu",
-        "Kurangi stok manual di rak supaya 'nyambung'",
+        "Tolak berbagi PIN; minta bantuan lewat jalur resmi",
+        "Berikan PIN sementara lalu ganti nanti",
+        "Tulis PIN di grup chat agar semua bisa bantu",
+        "Loginkan dia dengan akun Anda lalu biarkan",
       ],
-      benar: 2,
-      pembahasan:
-        "Kesalahan qty memengaruhi stok dan keuangan. Koreksi harus lewat prosedur resmi, bukan ditutupi.",
+      benar: 0,
+      pembahasan: "PIN pribadi menjaga jejak tanggung jawab tiap transaksi.",
     },
     {
       id: "k13",
       pertanyaan:
-        "Ada promosi 'beli 2 gratis 1' hanya untuk SKU tertentu. Pelanggan memaksa semua merek ikut promo. Apa yang benar?",
-      opsi: [
-        "Izinkan semua merek agar tidak ribut",
-        "Jelaskan syarat promo dengan sopan dan tawarkan opsi produk yang memang ikut promo",
-        "Diam-diam kasih gratis tanpa input sistem",
-        "Ubah aturan promo di sistem tanpa izin",
-      ],
-      benar: 1,
-      pembahasan:
-        "Promo punya syarat. Melanggar syarat merusak margin dan laporan; komunikasi jelas lebih tepat.",
+        "Belanja Rp120.000 mendapat cashback voucher Rp15.000 yang hanya berlaku transaksi berikutnya. Kas masuk hari ini?",
+      opsi: ["Rp120.000", "Rp105.000", "Rp135.000", "Rp15.000"],
+      benar: 0,
+      pembahasan: "Cashback untuk transaksi berikutnya; hari ini kas tetap 120.000.",
     },
     {
       id: "k14",
       pertanyaan:
-        "Anda menemukan selisih stok fisik vs sistem pada item mahal. Tindakan awal paling tepat?",
-      opsi: [
-        "Langsung tuduh rekan shift sebelumnya",
-        "Sesuaikan angka sistem ke fisik tanpa investigasi",
-        "Amankan area, laporkan ke kepala toko, bantu hitung ulang dan telusuri mutasi terakhir",
-        "Sembunyikan selisih dengan menambah penjualan fiktif",
-      ],
-      benar: 2,
-      pembahasan:
-        "Selisih stok mahal perlu investigasi terkontrol, bukan tuduhan atau penyesuaian buta.",
+        "Empat nota: 25.000, 18.000, 42.000, 15.000. Satu nota 18.000 dibatalkan. Total penjualan sah?",
+      opsi: ["Rp82.000", "Rp100.000", "Rp85.000", "Rp67.000"],
+      benar: 0,
+      pembahasan: "25 + 42 + 15 = 82; nota 18.000 tidak dihitung.",
     },
     {
       id: "k15",
       pertanyaan:
-        "Pelanggan meminta Anda menyimpan barang di luar area kasir 'sebentar' tanpa menitip resmi. Risiko utama jika disetujui sembarangan?",
-      opsi: [
-        "Tidak ada risiko",
-        "Barang bisa tertukar/hilang dan toko sulit membuktikan tanggung jawab",
-        "Hanya membuat toko terlihat ramai",
-        "Membuat stok otomatis bertambah",
-      ],
-      benar: 1,
-      pembahasan:
-        "Penitipan informal sering jadi sengketa kehilangan. Ikuti prosedur penitipan resmi bila ada.",
+        "Pelanggan bayar campuran: tunai Rp30.000 + transfer Rp55.000 untuk total Rp85.000. Apakah lunas?",
+      opsi: ["Ya, tepat lunas", "Kurang Rp5.000", "Lebih Rp5.000", "Kurang Rp30.000"],
+      benar: 0,
+      pembahasan: "30.000 + 55.000 = 85.000.",
     },
     {
       id: "k16",
       pertanyaan:
-        "Rekan meminta PIN Anda karena 'kasirnya error'. Respons paling tepat?",
+        "Anda menemukan kelebihan kas Rp20.000 tanpa penjelasan. Tindakan benar?",
       opsi: [
-        "Berikan PIN, nanti diganti",
-        "Tolak berbagi PIN; bantu lewat jalur resmi atau minta atasan reset akses",
-        "Tulis PIN di chat grup agar semua bisa bantu",
-        "Loginkan dia dengan akun Anda lalu biarkan sendiri",
+        "Laporkan dan catat sebagai selisih lebih kas",
+        "Bagi ke karyawan shift yang sama",
+        "Simpan pribadi sampai ada yang klaim",
+        "Campur ke kas berikutnya tanpa catatan",
       ],
-      benar: 1,
-      pembahasan:
-        "PIN/akses bersifat pribadi. Berbagi menghilangkan jejak pertanggungjawaban transaksi.",
+      benar: 0,
+      pembahasan: "Kelebihan kas wajib dilaporkan seperti kekurangan kas.",
     },
     {
       id: "k17",
       pertanyaan:
-        "Saat busy hour, Anda diminta sekalian membersihkan gudang belakang yang jauh dari lantai jual. Keputusan terbaik?",
-      opsi: [
-        "Langsung ke gudang karena perintah harus dituruti mentah-mentah",
-        "Sampaikan prioritas lantai jual saat ramai, usulkan jadwal bersih-bersih di luar jam puncak ke atasan",
-        "Abaikan semua tugas",
-        "Tutup kasir tanpa koordinasi untuk bersih-bersih",
-      ],
-      benar: 1,
-      pembahasan:
-        "Prioritas operasional saat ramai adalah pelayanan. Tugas sekunder dijadwalkan tanpa mengorbankan kasir/lantai jual.",
+        "Harga Rp80.000, diskon bertingkat 10% lalu 5% dari sisa. Berapa bayar akhir?",
+      opsi: ["Rp68.400", "Rp68.000", "Rp72.000", "Rp70.000"],
+      benar: 0,
+      pembahasan: "Setelah 10%: 72.000; lalu 5%: 68.400.",
     },
     {
       id: "k18",
       pertanyaan:
-        "Pelanggan menawar agresif di bawah harga modal yang Anda ketahui. Anda tidak punya wewenang diskon. Langkah benar?",
+        "Stok minimum 20. Stok aktual 18, ada PO masuk 30 besok. Untuk penjualan hari ini, sikap paling aman?",
       opsi: [
-        "Kasih harga di bawah modal agar closing",
-        "Jelaskan harga berlaku, tawarkan alternatif/produk lain, atau eskalasi ke kepala toko bila perlu keputusan khusus",
-        "Bohongi bahwa harga sudah diskon maksimal tanpa cek",
-        "Suruh pelanggan ke kompetitor",
+        "Jual hati-hati sesuai stok fisik yang ada hari ini",
+        "Jual sampai 48 karena PO pasti datang",
+        "Tutup penjualan item itu sepenuhnya",
+        "Ubah stok sistem jadi 48 tanpa barang datang",
       ],
-      benar: 1,
-      pembahasan:
-        "Menjual di bawah modal tanpa wewenang merugikan toko. Eskalasi dan alternatif lebih profesional.",
+      benar: 0,
+      pembahasan: "Yang bisa dijamin hari ini hanya stok fisik; PO belum tentu sudah tersedia.",
     },
     {
       id: "k19",
       pertanyaan:
-        "Anda melihat CCTV/indikasi pelanggan mencurigakan menyembunyikan barang. Tindakan yang tepat dan aman?",
+        "Barang rusak ditemukan saat rapiin rak. Tindakan benar?",
       opsi: [
-        "Menghakimi dan menggeledah paksa di depan umum",
-        "Ikuti SOP keamanan: amati, libatkan atasan/security, jangan main hakim sendiri",
-        "Langsung memaki di media sosial toko",
-        "Diam saja meski bukti kuat dan ada prosedur",
+        "Pisahkan, laporkan, jangan jual sebagai barang baik",
+        "Tetap jual harga normal tanpa info",
+        "Buang diam-diam tanpa laporan",
+        "Turunkan harga sendiri tanpa izin",
       ],
-      benar: 1,
-      pembahasan:
-        "Penanganan kecurangan mengikuti SOP agar aman secara hukum dan tidak memperburuk situasi.",
+      benar: 0,
+      pembahasan: "Barang rusak harus tercatat dan tidak dijual seolah kondisi baik.",
     },
     {
       id: "k20",
       pertanyaan:
-        "Di akhir hari ada selisih kas kurang Rp50.000. Beberapa orang menyarankan 'ditutup dari penjualan tunai besok'. Sikap benar?",
-      opsi: [
-        "Setuju menutup diam-diam agar laporan rapi",
-        "Laporkan selisih apa adanya, ikut investigasi, jangan manipulasi transaksi berikutnya",
-        "Pinjam uang teman untuk mengisi laci tanpa catatan",
-        "Kurangi stok barang setara Rp50.000 agar seimbang",
-      ],
-      benar: 1,
-      pembahasan:
-        "Menutup selisih dengan manipulasi memperparah masalah. Laporan jujur memungkinkan perbaikan sistem.",
+        "Total tunai hari ini Rp400.000. Modal kas awal Rp150.000. Setoran ke brankas harus berapa jika kas akhir di laci disisakan Rp100.000?",
+      opsi: ["Rp450.000", "Rp400.000", "Rp350.000", "Rp500.000"],
+      benar: 0,
+      pembahasan: "Kas tersedia 150.000 + 400.000 = 550.000; sisakan 100.000 → setor 450.000.",
     },
   ],
   uji_kepala: [
     {
       id: "h1",
       pertanyaan:
-        "Omset bulan ini naik 18%, tetapi laba bersih turun. Analisis pertama yang paling relevan?",
-      opsi: [
-        "Pastikan etalase lebih menarik karena omset sudah naik",
-        "Bedah margin kotor, diskon/promo, COGS, shrinkage, dan biaya operasional yang ikut naik",
-        "Naikkan target omset lagi tanpa cek struktur biaya",
-        "Abaikan laba karena omset lebih penting untuk citra",
-      ],
-      benar: 1,
-      pembahasan:
-        "Omset naik belum tentu sehat. Kepala toko harus memisahkan masalah harga/margin, loss, dan biaya.",
+        "Omset Rp120.000.000. HPP Rp84.000.000. Biaya operasional Rp22.000.000. Laba bersih?",
+      opsi: ["Rp14.000.000", "Rp36.000.000", "Rp16.000.000", "Rp22.000.000"],
+      benar: 0,
+      pembahasan: "Laba kotor 36jt; setelah biaya 22jt → laba bersih 14jt.",
     },
     {
       id: "h2",
       pertanyaan:
-        "Anda punya dua opsi promo: potongan 15% semua item, atau bundling item bermargin tinggi. Mana lebih tepat jika tujuan adalah jaga keuntungan?",
-      opsi: [
-        "Potongan merata 15% karena paling gampang dijelaskan",
-        "Bundling/item fokus bermargin sehat agar volume naik tanpa merusak seluruh margin kategori",
-        "Gratis semua ongkir tanpa batas meski toko tidak punya skema ongkir",
-        "Turunkan harga di bawah modal untuk semua SKU top seller",
-      ],
-      benar: 1,
-      pembahasan:
-        "Diskon merata mudah merusak margin global. Promo terarah pada margin sehat lebih terkendali.",
+        "Omset Rp80.000.000. Laba kotor Rp24.000.000. Gross margin berapa persen?",
+      opsi: ["30%", "24%", "28%", "32%"],
+      benar: 0,
+      pembahasan: "24 / 80 = 30%.",
     },
     {
       id: "h3",
       pertanyaan:
-        "Piutang 60 hari naik tajam sementara omset kredit juga naik. Keputusan manajerial yang paling tepat?",
-      opsi: [
-        "Longgarkan lagi limit agar omset kredit terus tumbuh",
-        "Kunci limit bermasalah, prioritaskan penagihan, evaluasi syarat kredit, dan pisahkan target omset tunai vs kredit",
-        "Hapus piutang lama dari laporan agar aging terlihat baik",
-        "Alihkan semua penjualan ke kredit tanpa DP",
-      ],
-      benar: 1,
-      pembahasan:
-        "Omset kredit yang menumpuk aging merusak kas. Kontrol kredit dan penagihan lebih penting daripada omset semu.",
+        "Harga jual Rp50.000. Target margin kotor 25% dari harga jual. HPP maksimal?",
+      opsi: ["Rp37.500", "Rp40.000", "Rp35.000", "Rp12.500"],
+      benar: 0,
+      pembahasan: "HPP = 50.000 × (1 − 0,25) = 37.500.",
     },
     {
       id: "h4",
       pertanyaan:
-        "Persediaan mengikat modal besar, turns rendah. Langkah paling strategis?",
+        "Omset naik dari Rp100jt menjadi Rp118jt, tetapi laba turun dari Rp12jt ke Rp9jt. Makna paling tepat?",
       opsi: [
-        "Tambah SKU baru sebanyak-banyaknya",
-        "Identifikasi dead stock, stop reorder, dorong sell-through terukur, rapikan assortment berdasarkan kontribusi margin",
-        "Sewa gudang tambahan tanpa evaluasi SKU",
-        "Naikkan harga semua slow moving 50% sekaligus",
+        "Pertumbuhan omset tidak selalu sehat jika margin/biaya memburuk",
+        "Omset naik selalu berarti bisnis makin sehat",
+        "Laba turun pasti karena pajak saja",
+        "Yang penting omset; laba bisa diabaikan",
       ],
-      benar: 1,
-      pembahasan:
-        "Masalahnya efisiensi modal stok. Perbaiki mix dan turns, bukan memperluas gudang atau SKU tanpa seleksi.",
+      benar: 0,
+      pembahasan: "Perlu bedah margin, diskon, HPP, dan biaya — omset naik bisa dibarengi laba turun.",
     },
     {
       id: "h5",
       pertanyaan:
-        "Supplier menawarkan diskon pembelian besar jika Anda ambil 3× lipat kebutuhan. Kapan penawaran ini boleh diterima?",
-      opsi: [
-        "Selalu diterima karena diskon pembelian = otomatis lebih untung",
-        "Hanya jika hitungan menunjukkan keuntungan setelah biaya simpan, risiko kedaluwarsa/rusak, dan dampak arus kas",
-        "Diterima jika sales menjanjikan bonus pribadi",
-        "Ditolak selalu karena stok banyak selalu buruk",
-      ],
-      benar: 1,
-      pembahasan:
-        "Diskon qty harus diuji dengan carrying cost dan cashflow, bukan diterima otomatis.",
+        "Persediaan rata-rata Rp40jt. HPP setahun Rp160jt. Inventory turns setahun?",
+      opsi: ["4 kali", "5 kali", "3 kali", "6 kali"],
+      benar: 0,
+      pembahasan: "Turns = HPP / persediaan rata-rata = 160 / 40 = 4.",
     },
     {
       id: "h6",
       pertanyaan:
-        "Kasir A sering selisih kecil, Kasir B jarang selisih tapi komplain pelanggan tinggi. Fokus coaching yang tepat?",
+        "Item A: omset Rp30jt margin 10%. Item B: omset Rp20jt margin 25%. Kontribusi laba kotor mana lebih besar?",
       opsi: [
-        "Pecat keduanya tanpa data",
-        "Untuk A: perketat cash control & pelatihan akurasi; untuk B: coaching service recovery & standar interaksi, ukur keduanya dengan metrik berbeda",
-        "Pindahkan A ke gudang dan abaikan isu B",
-        "Samakan hukuman tanpa melihat akar masalah",
+        "B lebih besar (Rp5jt vs Rp3jt)",
+        "A lebih besar karena omset lebih tinggi",
+        "Sama besar",
+        "Tidak bisa dibandingkan tanpa biaya sewa",
       ],
-      benar: 1,
-      pembahasan:
-        "Masalah berbeda butuh intervensi berbeda. Kepala toko mengelola kinerja berbasis akar penyebab.",
+      benar: 0,
+      pembahasan: "A: 3jt; B: 5jt. Kontribusi B lebih tinggi meski omset lebih kecil.",
     },
     {
       id: "h7",
       pertanyaan:
-        "Harga kompetitor di sebelah lebih murah 8% untuk item traffic. Respons yang paling bijak?",
+        "Diskon 15% diberikan pada item bermargin 18% (dari harga jual). Setelah diskon, margin menjadi kira-kira?",
       opsi: [
-        "Perang harga total sampai margin habis",
-        "Analisis peran item (traffic vs margin), pertimbangkan price-match terbatas, bundling, atau diferensiasi layanan/stok tanpa merusak keseluruhan margin",
-        "Abaikan pelanggan yang membandingkan harga",
-        "Naikkan harga item lain secara sembarangan untuk menutupi",
+        "Sekitar 3% (nyaris habis)",
+        "Tetap 18%",
+        "Naik menjadi 33%",
+        "Menjadi 15%",
       ],
-      benar: 1,
+      benar: 0,
       pembahasan:
-        "Respons kompetitif harus selektif. Perang harga menyeluruh sering menghancurkan laba.",
+        "Jika HPP = 82% harga lama, setelah harga jadi 85%, margin ≈ (85−82)/85 ≈ 3,5%.",
     },
     {
       id: "h8",
       pertanyaan:
-        "Laporan menunjukkan gross margin turun 3 poin. Manakah penyebab yang paling mungkin perlu diuji duluan?",
-      opsi: [
-        "Warna cat dinding toko",
-        "Perubahan mix produk, kenaikan COGS, diskon tidak terkendali, atau salah harga jual",
-        "Jumlah follower media sosial",
-        "Cuaca saja tanpa cek data penjualan",
-      ],
-      benar: 1,
-      pembahasan:
-        "Margin kotor terpengaruh harga jual, HPP, mix, dan diskon — itu yang dicek lebih dulu.",
+        "Piutang Rp25jt, di antaranya Rp8jt already > 60 hari. Jika 40% dari yang aging diperkirakan macet, estimasi kerugian?",
+      opsi: ["Rp3,2jt", "Rp8jt", "Rp10jt", "Rp2jt"],
+      benar: 0,
+      pembahasan: "40% × 8jt = 3,2jt.",
     },
     {
       id: "h9",
       pertanyaan:
-        "Anda harus memilih: kejar omset akhir bulan dengan diskon dalam, atau jaga margin meski omset datar. Kerangka keputusan yang benar?",
-      opsi: [
-        "Omset selalu nomor satu tanpa syarat",
-        "Putuskan berdasarkan target laba & kas: diskon dalam hanya jika kontribusi setelah diskon dan tujuan strategis (clearance) jelas",
-        "Margin selalu dikorbankan demi ranking omset antar cabang",
-        "Tidak perlu kerangka; ikuti feeling shift malam",
-      ],
-      benar: 1,
-      pembahasan:
-        "Kepala toko mengoptimalkan laba dan kas, bukan vanity metric omset semata.",
+        "Target laba kuartal Rp15jt. Margin bersih historis 8% dari omset. Omset minimal yang dibutuhkan?",
+      opsi: ["Rp187,5jt", "Rp150jt", "Rp120jt", "Rp200jt"],
+      benar: 0,
+      pembahasan: "15 / 0,08 = 187,5jt.",
     },
     {
       id: "h10",
       pertanyaan:
-        "Shrinkage (hilang/rusak) naik. Urutan tindakan yang paling tepat?",
-      opsi: [
-        "Langsung potong gaji semua karyawan merata",
-        "Ukur kategori kerugian, perketat receiving & cycle count, review akses gudang, investigasi outlier, baru sanksi berbasis bukti",
-        "Matikan CCTV agar hemat listrik",
-        "Naikkan harga semua barang 10% tanpa bereskan proses",
-      ],
-      benar: 1,
-      pembahasan:
-        "Shrinkage dikendalikan lewat proses dan bukti, bukan hukuman kolektif membabi buta.",
+        "Kas awal bulan Rp20jt. Penerimaan Rp55jt. Pengeluaran Rp48jt. Kas akhir?",
+      opsi: ["Rp27jt", "Rp35jt", "Rp23jt", "Rp7jt"],
+      benar: 0,
+      pembahasan: "20 + 55 − 48 = 27jt.",
     },
     {
       id: "h11",
       pertanyaan:
-        "Tim pembelian ingin menambah 50 SKU baru. Apa filter keputusan kepala toko?",
+        "Supplier kasih diskon beli 12% jika ambil stok 3 bulan. Biaya simpan diperkirakan 4% per bulan dari nilai stok ekstra. Tanpa hitung lain, 2 bulan simpan ekstra ≈?",
       opsi: [
-        "Terima semua agar rak terlihat penuh",
-        "Uji potensi margin, turns, overlapping dengan SKU existing, kapasitas rak/modal, dan peran strategis kategori",
-        "Tolak semua inovasi",
-        "Pilih SKU berdasarkan bonus vendor semata",
+        "Biaya simpan ~8% bisa menggerus manfaat diskon 12%",
+        "Diskon 12% selalu untung berapa pun lama simpan",
+        "Biaya simpan tidak relevan untuk keputusan beli",
+        "Ambil 3 bulan selalu lebih murah secara kas",
       ],
-      benar: 1,
+      benar: 0,
       pembahasan:
-        "Assortment expansion harus lolos filter ekonomi dan operasional, bukan sekadar menambah SKU.",
+        "Manfaat diskon harus dibandingkan carrying cost dan dampak kas; 8% vs 12% tinggal tipis sebelum risiko lain.",
     },
     {
       id: "h12",
       pertanyaan:
-        "Arus kas ketat, hutang supplier jatuh tempo bersamaan dengan gaji. Prioritas yang paling sehat secara keberlanjutan usaha?",
-      opsi: [
-        "Bayar promo iklan dulu, tunda gaji dan supplier",
-        "Susun prioritas: kewajiban kritis (gaji sesuai aturan, supplier strategis untuk stok jalan), tundakan pengeluaran non-esensial, negosiasi jatuh tempo dengan data",
-        "Abaikan semua tagihan sampai bulan depan",
-        "Bayar supplier non-strategis dulu karena paling sering menagih",
-      ],
-      benar: 1,
-      pembahasan:
-        "Prioritas kas menjaga operasional dan hubungan kritis, plus kepatuhan terhadap kewajiban karyawan.",
+        "Omset hari ini Rp9jt dari 180 nota. Average basket size?",
+      opsi: ["Rp50.000", "Rp45.000", "Rp60.000", "Rp40.000"],
+      benar: 0,
+      pembahasan: "9.000.000 / 180 = 50.000.",
     },
     {
       id: "h13",
       pertanyaan:
-        "Satu pelanggan besar minta harga khusus yang hampir menghabiskan margin, dengan janji volume. Syarat agar bisa dipertimbangkan?",
+        "Harga kompetitor Rp46.000. HPP Anda Rp40.000. Jika match harga, margin Anda?",
       opsi: [
-        "Langsung setujui lisan tanpa batas waktu",
-        "Hitung break-even volume, batasi SKU/periode, kunci syarat pembayaran, dan review berkala pencapaian volume",
-        "Berikan harga khusus permanen untuk semua produk",
-        "Tolak otomatis tanpa analisis karena semua harga khusus buruk",
+        "≈13% dari harga jual",
+        "≈20% dari harga jual",
+        "≈8% dari harga jual",
+        "≈25% dari harga jual",
       ],
-      benar: 1,
-      pembahasan:
-        "Harga khusus harus berbasis hitungan dan kontrol, bukan janji volume tanpa mekanisme review.",
+      benar: 0,
+      pembahasan: "(46.000 − 40.000) / 46.000 ≈ 13%.",
     },
     {
       id: "h14",
       pertanyaan:
-        "Dashboard harian Anda hanya menampilkan omset. Metrik tambahan yang paling kritis untuk keputusan kepala toko?",
-      opsi: [
-        "Jumlah likes di posting toko",
-        "Gross margin / estimasi laba, kas & selisih, stok kritis, aging piutang, dan isu layanan/tim",
-        "Hanya jumlah nota tanpa nilai",
-        "Hanya panjang antrean tanpa nilai transaksi",
-      ],
-      benar: 1,
-      pembahasan:
-        "Keputusan harian butuh kombinasi profitabilitas, kas, stok, dan risiko operasional.",
+        "Shrinkage tercatat Rp1,5jt pada bulan dengan HPP Rp50jt. Persentase shrinkage terhadap HPP?",
+      opsi: ["3%", "1,5%", "5%", "2%"],
+      benar: 0,
+      pembahasan: "1,5 / 50 = 3%.",
     },
     {
       id: "h15",
       pertanyaan:
-        "Ada usulan menambah jam buka malam. Bagaimana mengevaluasinya?",
+        "Dua opsi promo: (1) diskon 10% semua item, (2) bundling item margin tinggi. Jika tujuan jaga laba, pilihan yang lebih aman?",
       opsi: [
-        "Langsung buka karena kompetitor juga buka",
-        "Uji dengan data: potensi penjualan malam vs biaya tenaga/listrik/keamanan dan risiko, pilot terbatas, lalu putuskan",
-        "Tolak karena malam selalu sepi di semua lokasi",
-        "Buka 24 jam tanpa uji coba",
+        "Bundling terarah pada item bermargin sehat",
+        "Diskon merata 10% ke semua item",
+        "Turunkan harga di bawah HPP untuk traffic",
+        "Gratis tanpa batas untuk semua kategori",
       ],
-      benar: 1,
-      pembahasan:
-        "Perubahan jam operasional adalah keputusan berbasis unit economics, bukan ikut-ikutan.",
+      benar: 0,
+      pembahasan: "Diskon merata merusak margin global; promo terarah lebih terkendali.",
     },
     {
       id: "h16",
       pertanyaan:
-        "Dua kategori: A omset tinggi margin tipis, B omset sedang margin tebal. Alokasi ruang rak yang lebih rasional?",
-      opsi: [
-        "Berikan semua ruang ke A karena omset tertinggi",
-        "Seimbangkan: A untuk traffic terkendali, B cukup space untuk maksimalkan kontribusi laba, evaluasi ulang berkala",
-        "Hapus B karena omsetnya bukan yang terbesar",
-        "Acak space tiap minggu tanpa data",
-      ],
-      benar: 1,
-      pembahasan:
-        "Space planning mengoptimalkan kontribusi laba dan traffic, bukan hanya mengejar omset kategori.",
+        "Penjualan kredit Rp12jt. Pelunasan masuk Rp7jt. Piutang bertambah berapa (abaikan saldo awal)?",
+      opsi: ["Rp5jt", "Rp12jt", "Rp7jt", "Rp19jt"],
+      benar: 0,
+      pembahasan: "Tambah piutang neto = kredit baru − pelunasan = 5jt.",
     },
     {
       id: "h17",
       pertanyaan:
-        "Karyawan star performer meminta kenaikan besar di luar skema. Pendekatan manajerial yang tepat?",
-      opsi: [
-        "Tolak kasar tanpa dialog",
-        "Nilai dampak bisnis, bandingkan dengan struktur gaji/insentif, tawarkan jalur berbasis kinerja yang adil dan sustainable",
-        "Kabulkan semua permintaan agar tidak resign, tanpa hitungan",
-        "Naikkan gaji semua orang dengan persentase sama tanpa terkait kinerja",
-      ],
-      benar: 1,
-      pembahasan:
-        "Retensi penting, tetapi kompensasi harus adil, terukur, dan tidak merusak struktur biaya.",
+        "Biaya tetap Rp18jt/bulan. Margin kontribusi rata-rata 20% dari omset. Omset break-even?",
+      opsi: ["Rp90jt", "Rp72jt", "Rp100jt", "Rp80jt"],
+      benar: 0,
+      pembahasan: "BE = biaya tetap / margin kontribusi = 18 / 0,2 = 90jt.",
     },
     {
       id: "h18",
       pertanyaan:
-        "Anda menemukan pola: retur tinggi pada satu kategori setelah ganti supplier. Langkah paling tepat?",
+        "SKU slow moving nilai Rp6jt. Promo clearance laku Rp4,5jt dengan HPP Rp5,2jt. Dampak paling akurat?",
       opsi: [
-        "Sembunyikan retur agar KPI terlihat baik",
-        "Analisis penyebab (kualitas/salah kirim/salah jual), hentikan sementara reorder, negosiasi klaim, perbaiki QC receiving",
-        "Naikkan harga kategori itu saja tanpa bereskan kualitas",
-        "Pindahkan retur ke kategori lain di laporan",
+        "Omset Rp4,5jt tetapi realisasi rugi kotor Rp0,7jt, plus bebaskan modal",
+        "Otomatis untung karena stok berkurang",
+        "Tidak ada dampak ke laba karena uang masuk",
+        "Laba naik Rp4,5jt penuh",
       ],
-      benar: 1,
-      pembahasan:
-        "Retur adalah sinyal kualitas/proses. Harus ditelusuri ke supplier dan receiving, bukan dikosmetik.",
+      benar: 0,
+      pembahasan: "Clearance bisa rugi kotor (4,5 − 5,2) tetapi memperbaiki turns/modal.",
     },
     {
       id: "h19",
       pertanyaan:
-        "Target kuartal: naikkan keuntungan 10%. Manakah portofolio aksi yang paling koheren?",
-      opsi: [
-        "Hanya pasang spanduk baru",
-        "Kombinasi: naikkan mix produk bermargin, kendalikan diskon, turunkan shrinkage, rapikan biaya tetap variabel, dan jaga konversi layanan",
-        "Potong semua gaji 10%",
-        "Diskon besar-besaran sepanjang kuartal tanpa kontrol",
-      ],
-      benar: 1,
-      pembahasan:
-        "Naik laba biasanya hasil beberapa tuas: mix, harga/diskon, loss, biaya, dan eksekusi layanan.",
+        "Target naikkan keuntungan 10% dari laba bulan lalu Rp10jt. Jika margin bersih tetap 5%, berapa omset tambahan yang dibutuhkan?",
+      opsi: ["Rp20jt", "Rp10jt", "Rp5jt", "Rp50jt"],
+      benar: 0,
+      pembahasan: "Laba tambahan Rp1jt; omset tambahan = 1 / 0,05 = 20jt.",
     },
     {
       id: "h20",
       pertanyaan:
-        "Di rapat, sales mendorong 'closing umpamanya' dengan janji spekulatif stok yang belum pasti ada. Sikap kepala toko?",
+        "Laporan harian kepala toko paling berguna jika memuat kombinasi metrik berikut:",
       opsi: [
-        "Izinkan janji spekulatif demi omset hari itu",
-        "Larang overpromise; jual berbasis ketersediaan/ETA tertulis, jaga kepercayaan jangka panjang meski closing lebih lambat",
-        "Biarkan tiap kasir membuat kebijakan sendiri",
-        "Catat penjualan dulu, stok menyusul entah kapan",
+        "Omset, margin/laba, kas & selisih, stok kritis, aging piutang",
+        "Hanya omset dan jumlah pengunjung",
+        "Hanya absensi karyawan dan foto etalase",
+        "Hanya jumlah nota tanpa nilai dan margin",
       ],
-      benar: 1,
-      pembahasan:
-        "Overpromise merusak kepercayaan dan menimbulkan biaya operasional tambahan. Integritas stok/ETA lebih berharga jangka panjang.",
+      benar: 0,
+      pembahasan: "Keputusan harian butuh profitabilitas, kas, stok, dan risiko kredit — bukan vanity metric saja.",
     },
   ],
 };
