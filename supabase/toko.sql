@@ -59,7 +59,7 @@ create table if not exists toko.pelanggan (
 create table if not exists toko.pengguna (
   id uuid primary key default gen_random_uuid(),
   nama text not null unique,
-  peran text not null check (peran in ('admin', 'kasir', 'pembelian', 'akunting')),
+  peran text not null check (peran in ('admin', 'kasir', 'pembelian', 'akunting', 'uji_karyawan', 'uji_kepala')),
   pin_hash text not null,
   aktif boolean not null default true,
   created_at timestamptz not null default now()
@@ -180,7 +180,9 @@ values
   ('Admin', 'admin', encode(digest('1234', 'sha256'), 'hex')),
   ('Kasir', 'kasir', encode(digest('1234', 'sha256'), 'hex')),
   ('Pembelian', 'pembelian', encode(digest('1234', 'sha256'), 'hex')),
-  ('Akunting', 'akunting', encode(digest('1234', 'sha256'), 'hex'))
+  ('Akunting', 'akunting', encode(digest('1234', 'sha256'), 'hex')),
+  ('Karyawan Test', 'uji_karyawan', encode(digest('1234', 'sha256'), 'hex')),
+  ('Kepala Toko Test', 'uji_kepala', encode(digest('1234', 'sha256'), 'hex'))
 on conflict (nama) do nothing;
 
 create or replace function toko.nomor_baru(prefix text)

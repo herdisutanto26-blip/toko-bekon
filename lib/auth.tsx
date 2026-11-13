@@ -4,7 +4,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { db, hashPin } from "@/lib/api";
 import { pesanError } from "@/lib/format";
 
-export type Peran = "admin" | "kasir" | "pembelian" | "akunting";
+export type Peran =
+  | "admin"
+  | "kasir"
+  | "pembelian"
+  | "akunting"
+  | "uji_karyawan"
+  | "uji_kepala";
 
 export type SesiPengguna = {
   id: string;
@@ -24,6 +30,10 @@ type AuthState = {
 const Ctx = createContext<AuthState | null>(null);
 const KEY = "toko-sesi";
 
+export function adalahPeranUji(peran: Peran) {
+  return peran === "uji_karyawan" || peran === "uji_kepala";
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<SesiPengguna | null>(null);
@@ -31,13 +41,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const raw = sessionStorage.getItem(KEY);
-    if (raw) setUser(JSON.parse(raw) as SesiPengguna);
+    const cached = raw ? (JSON.parse(raw) as SesiPengguna) : null;
+    if (cached) setUser(cached);
+
     db()
       .from("pengguna")
       .select("id")
       .limit(1)
-      .then(({ error }) => {
+      .then(async ({ error }) => {
         setDbSiap(!error);
+        if (!error && cached && cached.id !== "latihan") {
+          const { data } = await db()
+            .from("pengguna")
+            .select("id,nama,peran,aktif")
+            .eq("id", cached.id)
+            .maybeSingle();
+          if (!data || data.aktif === false) {
+            setUser(null);
+            sessionStorage.removeItem(KEY);
+          } else {
+            const next: SesiPengguna = {
+              id: data.id,
+              nama: data.nama,
+              peran: data.peran as Peran,
+              latihan: false,
+            };
+            setUser(next);
+            sessionStorage.setItem(KEY, JSON.stringify(next));
+          }
+        }
         setReady(true);
       });
   }, []);
@@ -80,6 +112,7 @@ export function useAuth() {
 }
 
 const akses: Record<string, Peran[]> = {
+  "/uji": ["uji_karyawan", "uji_kepala"],
   "/dashboard": ["admin", "kasir", "pembelian", "akunting"],
   "/penjualan": ["admin", "kasir", "akunting"],
   "/dari-bekon": ["admin", "akunting"],
@@ -93,9 +126,13 @@ const akses: Record<string, Peran[]> = {
   "/supplier": ["admin", "pembelian"],
   "/pelanggan": ["admin", "kasir"],
   "/master": ["admin"],
+  "/hasil-ujian": ["admin"],
 };
 
 export function boleh(peran: Peran, href: string) {
+  if (adalahPeranUji(peran)) {
+    return href === "/uji" || href.startsWith("/uji/");
+  }
   const key = Object.keys(akses).find((k) => href === k || href.startsWith(k + "/"));
   if (!key) return true;
   return akses[key].includes(peran);

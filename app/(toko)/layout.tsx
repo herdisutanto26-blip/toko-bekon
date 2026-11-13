@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AuthProvider, boleh, useAuth } from "@/lib/auth";
+import { AuthProvider, adalahPeranUji, boleh, useAuth } from "@/lib/auth";
 import { db } from "@/lib/api";
 
 const nav: { group: string; items: { href: string; label: string }[] }[] = [
@@ -33,22 +33,53 @@ const nav: { group: string; items: { href: string; label: string }[] }[] = [
       { href: "/supplier", label: "Supplier" },
       { href: "/pelanggan", label: "Pelanggan" },
       { href: "/master", label: "Kategori & Satuan" },
+      { href: "/hasil-ujian", label: "Hasil Ujian" },
     ],
   },
 ];
+
+function labelPeran(peran: string) {
+  if (peran === "uji_karyawan") return "Ujian · Karyawan";
+  if (peran === "uji_kepala") return "Ujian · Kepala Toko";
+  return peran;
+}
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { ready, user, dbSiap, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const modeUji = user ? adalahPeranUji(user.peran) : false;
 
   useEffect(() => {
     if (!ready || !user) return;
-    if (!boleh(user.peran, pathname)) router.replace("/dashboard");
+    if (!boleh(user.peran, pathname)) {
+      router.replace(adalahPeranUji(user.peran) ? "/uji" : "/dashboard");
+    }
   }, [ready, user, pathname, router]);
 
   if (!ready) return <p className="p-8 text-sm text-gray-500">Memuat...</p>;
   if (!user) return <Login />;
+
+  if (modeUji) {
+    return (
+      <div className="flex h-full flex-col bg-gray-50">
+        <header className="no-print flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">{user.nama}</p>
+            <p className="text-xs text-gray-500">{labelPeran(user.peran)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex items-center rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-sm text-orange-700 hover:bg-orange-100"
+          >
+            Keluar
+          </button>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">
@@ -83,10 +114,14 @@ function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-gray-200 text-xs text-gray-500">
+        <div className="relative z-20 p-4 pb-6 border-t border-gray-200 text-xs text-gray-500 bg-white">
           <p className="font-medium text-gray-700">{user.nama}</p>
-          <p className="capitalize">{user.peran}</p>
-          <button onClick={logout} className="mt-2 text-orange-700 hover:underline">
+          <p>{labelPeran(user.peran)}</p>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-2 inline-flex items-center rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-orange-700 hover:bg-orange-100"
+          >
             Keluar
           </button>
         </div>
