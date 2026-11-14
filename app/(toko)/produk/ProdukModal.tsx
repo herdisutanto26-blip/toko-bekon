@@ -89,22 +89,21 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-800">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <h2 className="font-semibold text-gray-900">
             {editData ? "Edit Produk" : "Tambah Produk"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center text-2xl leading-none text-gray-900" aria-label="Tutup">&times;</button>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="space-y-4 overflow-y-auto px-5 py-5">
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nama Produk *</label>
+            <label className="mb-1 block text-sm font-semibold text-gray-900">Nama Produk *</label>
             <input
               value={form.nama}
               onChange={(e) => set("nama", e.target.value)}
@@ -114,7 +113,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Kode SKU</label>
+            <label className="mb-1 block text-sm font-semibold text-gray-900">Kode SKU</label>
             <div className="flex gap-2">
               <input
                 value={form.kode_sku}
@@ -132,12 +131,12 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
                 {generatingSku ? "..." : "Generate SKU"}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Pilih kategori dulu, lalu klik Generate SKU</p>
+            <p className="mt-1 text-sm font-medium text-gray-700">Pilih kategori dulu, lalu klik Generate SKU</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Kategori</label>
               <select
                 value={form.kategori_id}
                 onChange={(e) => set("kategori_id", e.target.value)}
@@ -150,7 +149,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Satuan</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Satuan</label>
               <select
                 value={form.satuan_id}
                 onChange={(e) => set("satuan_id", e.target.value)}
@@ -166,7 +165,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Harga Beli</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Harga Beli</label>
               <input
                 type="number"
                 value={form.harga_beli}
@@ -175,7 +174,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Harga Jual</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Harga Jual</label>
               <input
                 type="number"
                 value={form.harga_jual}
@@ -184,7 +183,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Stok Minimum</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Stok Minimum</label>
               <input
                 type="number"
                 value={form.stok_minimum}
@@ -193,7 +192,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="mb-1 block text-sm font-semibold text-gray-900">
                 {editData ? "Stok saat ini" : "Stok awal"}
               </label>
               <input
@@ -232,7 +231,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Keterangan</label>
+            <label className="mb-1 block text-sm font-semibold text-gray-900">Keterangan</label>
             <textarea
               value={form.keterangan}
               onChange={(e) => set("keterangan", e.target.value)}
@@ -253,7 +252,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex shrink-0 justify-end gap-3 border-t border-gray-200 px-5 py-4">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"

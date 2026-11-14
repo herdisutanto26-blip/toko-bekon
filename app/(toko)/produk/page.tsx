@@ -96,29 +96,28 @@ export default function ProdukPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Produk</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Produk</h1>
         <button
           onClick={handleTambah}
-          className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700"
+          className="rounded-lg bg-orange-600 px-4 py-3 text-base font-semibold text-white hover:bg-orange-700 sm:py-2 sm:text-sm"
         >
           + Tambah Produk
         </button>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-3 mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
           placeholder="Cari nama / SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 sm:w-64"
         />
         <select
           value={filterKategori}
           onChange={(e) => setFilterKategori(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 sm:w-auto"
         >
           <option value="">Semua Kategori</option>
           {kategoriList.map((k) => (
@@ -127,80 +126,135 @@ export default function ProdukPage() {
         </select>
       </div>
 
-      {/* Tabel */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-400">Memuat data...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">Tidak ada produk</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Kode SKU</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nama Produk</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Kategori</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Satuan</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Stok</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Harga Jual</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Varian</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-500 font-mono text-xs">{p.kode_sku ?? "-"}</td>
-                  <td className="px-4 py-3 font-medium text-gray-800">{p.nama}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {(p.kategori_produk as KategoriProduk)?.nama ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {kemasanUrut(p).length > 1
-                      ? kemasanUrut(p).map((k) => k.satuan).join(", ")
-                      : (p.satuan as Satuan)?.nama ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-800">{p.stok ?? 0}</td>
-                  <td className="px-4 py-3 text-right text-gray-800">
-                    {kemasanUrut(p).length > 1 ? (
-                      <div className="space-y-0.5">
-                        {kemasanUrut(p).map((k) => (
-                          <div key={k.id}>
-                            {k.satuan} · {formatRp(k.harga_jual)}
-                          </div>
+      {loading ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-base font-medium text-gray-800">Memuat data...</div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-base font-medium text-gray-800">Tidak ada produk</div>
+      ) : (
+        <>
+          <div className="space-y-3 md:hidden">
+            {filtered.map((p) => {
+              const kemasan = kemasanUrut(p);
+              const satuan = kemasan.length > 1
+                ? kemasan.map((k) => k.satuan).join(", ")
+                : (p.satuan as Satuan)?.nama ?? "-";
+              return (
+                <article key={p.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-base font-bold leading-snug text-gray-900">{p.nama}</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-800">{p.kode_sku ?? "-"}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-bold text-gray-900">Stok {p.stok ?? 0}</p>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-gray-800">
+                    {(p.kategori_produk as KategoriProduk)?.nama ?? "-"} · {satuan}
+                  </p>
+                  <div className="mt-2 text-sm font-semibold text-gray-900">
+                    {kemasan.length > 1 ? (
+                      <div className="space-y-1">
+                        {kemasan.map((k) => (
+                          <p key={k.id}>{k.satuan} · {formatRp(k.harga_jual)}</p>
                         ))}
                       </div>
                     ) : (
-                      formatRp(p.harga_jual)
+                      <p>{formatRp(p.harga_jual)}</p>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {p.punya_varian ? (
-                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">Ya</span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  </div>
+                  {p.punya_varian && (
+                    <p className="mt-2 inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">Punya varian</p>
+                  )}
+                  <div className="mt-3 flex gap-2">
                     <button
                       onClick={() => handleEdit(p)}
-                      className="text-orange-600 hover:underline text-xs mr-3"
+                      className="flex-1 rounded-lg border border-orange-200 bg-orange-50 py-2.5 text-sm font-semibold text-orange-700"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleNonaktif(p.id)}
-                      className="text-red-500 hover:underline text-xs"
+                      className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-700"
                     >
                       Nonaktif
                     </button>
-                  </td>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white md:block">
+            <table className="w-full text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Kode SKU</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Nama Produk</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Kategori</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Satuan</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-900">Stok</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-900">Harga Jual</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-900">Varian</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-900">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((p) => {
+                  const kemasan = kemasanUrut(p);
+                  return (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-mono text-sm font-medium text-gray-800">{p.kode_sku ?? "-"}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">{p.nama}</td>
+                      <td className="px-4 py-3 text-gray-800">
+                        {(p.kategori_produk as KategoriProduk)?.nama ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-800">
+                        {kemasan.length > 1
+                          ? kemasan.map((k) => k.satuan).join(", ")
+                          : (p.satuan as Satuan)?.nama ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">{p.stok ?? 0}</td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        {kemasan.length > 1 ? (
+                          <div className="space-y-0.5">
+                            {kemasan.map((k) => (
+                              <div key={k.id}>
+                                {k.satuan} · {formatRp(k.harga_jual)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          formatRp(p.harga_jual)
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {p.punya_varian ? (
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">Ya</span>
+                        ) : (
+                          <span className="text-gray-700">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleEdit(p)}
+                          className="mr-3 text-sm font-semibold text-orange-700 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleNonaktif(p.id)}
+                          className="text-sm font-semibold text-red-700 hover:underline"
+                        >
+                          Nonaktif
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {modalOpen && (
         <ProdukModal
