@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Merek } from "@/components/Merek";
 import { AuthProvider, adalahPeranUji, boleh, tujuanAwal, useAuth } from "@/lib/auth";
 import { labelPeran, menuToko } from "@/lib/menu";
 
@@ -42,7 +43,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex h-full flex-col bg-gray-50">
         <header className="no-print flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
           <div>
-            <p className="text-sm font-semibold text-gray-900">{user.nama}</p>
+            <Merek logo="h-8 w-auto" nama="text-base" />
+            <p className="mt-2 text-sm font-semibold text-gray-900">{user.nama}</p>
             <p className="text-sm text-gray-700">{labelPeran(user.peran)}</p>
           </div>
           <button
@@ -74,8 +76,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           menuBuka ? "translate-x-0" : "-translate-x-full max-md:pointer-events-none"
         }`}
       >
-        <div className="flex h-14 items-center justify-between border-b border-gray-200 px-5">
-          <span className="text-lg font-bold text-orange-600">Toko Bekon</span>
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
+          <Merek />
           <button
             type="button"
             aria-label="Tutup menu"
@@ -102,7 +104,7 @@ function Shell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       onClick={() => setMenuBuka(false)}
                       className={`block rounded-lg px-3 py-3 text-base font-semibold md:py-2 md:text-sm ${
-                        active ? "bg-orange-50 text-orange-700" : "text-gray-900 hover:bg-gray-100"
+                        active ? "bg-merek-biru-lembut text-merek-biru-tua" : "text-gray-900 hover:bg-gray-100"
                       }`}
                     >
                       {item.label}
@@ -138,7 +140,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </button>
-          <span className="text-lg font-bold text-orange-600">Toko Bekon</span>
+          <Merek logo="h-8 w-auto" nama="text-base" />
         </header>
         {!dbSiap && (
           <p className="no-print border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 md:px-6">
@@ -165,39 +167,40 @@ function Login() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gray-50 p-4">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6">
-        <h1 className="mb-1 text-xl font-bold text-orange-600">Toko Bekon</h1>
-        <p className="mb-5 text-sm font-medium text-gray-800">Masuk dengan akun. iPOS 4 tetap catatan yang sah.</p>
-        {!dbSiap && (
-          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
-            Tabel belum ada. Anda tetap bisa masuk dan melihat menu. Kata sandi latihan: 1234 setelah SQL dijalankan.
-          </p>
-        )}
-        <label className="mb-1 block text-sm font-semibold text-gray-900">Nama akun</label>
-        <input
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          autoComplete="username"
-          placeholder="admin"
-          className="mb-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900"
-        />
-        <label className="mb-1 block text-sm font-semibold text-gray-900">Kata sandi</label>
-        <input
-          type="password"
-          value={sandi}
-          onChange={(e) => setSandi(e.target.value)}
-          autoComplete="current-password"
-          className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900"
-        />
-        {error && <p className="mb-3 text-sm font-medium text-red-700">{error}</p>}
-        <button className="w-full rounded-lg bg-orange-600 py-3 text-base font-semibold text-white hover:bg-orange-700">
-          Masuk
-        </button>
-        {dbSiap && (
-          <p className="mt-3 text-sm font-medium leading-relaxed text-gray-700">
-            Akun latihan: admin, kasir, pembelian, atau akunting. Kata sandi awal 1234, ganti lewat menu Akses & Akun.
-          </p>
-        )}
+      <form onSubmit={submit} className="w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        <div className="flex h-1.5" aria-hidden="true">
+          <div className="flex-1 bg-merek-biru" />
+          <div className="flex-1 bg-merek-oranye" />
+        </div>
+        <div className="p-6">
+          <h1 className="mb-6">
+            <Merek logo="h-16 w-auto" nama="text-2xl" />
+          </h1>
+          {!dbSiap && (
+            <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+              Tabel belum ada. Anda tetap bisa masuk dan melihat menu. Kata sandi latihan: 1234 setelah SQL dijalankan.
+            </p>
+          )}
+          <label className="mb-1 block text-sm font-semibold text-gray-900">Nama akun</label>
+          <input
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+            autoComplete="username"
+            className="mb-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900"
+          />
+          <label className="mb-1 block text-sm font-semibold text-gray-900">Kata sandi</label>
+          <input
+            type="password"
+            value={sandi}
+            onChange={(e) => setSandi(e.target.value)}
+            autoComplete="current-password"
+            className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900"
+          />
+          {error && <p className="mb-3 text-sm font-medium text-red-700">{error}</p>}
+          <button className="w-full rounded-lg bg-orange-600 py-3 text-base font-semibold text-white hover:bg-orange-700">
+            Masuk
+          </button>
+        </div>
       </form>
     </div>
   );

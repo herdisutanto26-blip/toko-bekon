@@ -11,6 +11,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-merek-biru: #4daae5;
+  --color-merek-biru-tua: #1971a9;
+  --color-merek-biru-lembut: #e7f5fc;
+  --color-merek-oranye: #e48b45;
+  --color-orange-50: #fdf6ee;
+  --color-orange-100: #f8e6d2;
+  --color-orange-200: #f0cfaa;
+  --color-orange-300: #e6b17a;
+  --color-orange-400: #e49a58;
+  --color-orange-500: #e48b45;
+  --color-orange-600: #b25d1a;
+  --color-orange-700: #944c14;
+  --color-orange-800: #743b12;
+  --color-orange-900: #5c2f0e;
+  --color-orange-950: #341a08;
 }
 
 html {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Merek } from "@/components/Merek";
 import { db } from "@/lib/api";
 import { formatRp, sisaTagihan } from "@/lib/format";
 
@@ -40,7 +41,9 @@ export default function NotaJualPage() {
         Cetak nota
       </button>
       <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h1 className="text-xl font-bold text-orange-600">Toko Bekon</h1>
+        <div className="mb-4 border-b border-gray-200 pb-4">
+          <Merek logo="h-14 w-auto" nama="text-xl" />
+        </div>
         <p className="text-sm text-gray-500 mb-4">{nota.nomor_nota} · {nota.tanggal}</p>
         <p className="text-sm mb-4">Pelanggan: {nota.pelanggan?.nama ?? "Umum"}</p>
         <table className="w-full text-sm mb-4">

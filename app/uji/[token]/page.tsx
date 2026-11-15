@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { Merek } from "@/components/Merek";
 import { db } from "@/lib/api";
 import { pesanError } from "@/lib/format";
 import { acakSoal, labelPaket, soalUjian, type PaketUji, type SoalUjian } from "@/lib/soal-ujian";
@@ -107,7 +108,9 @@ export default function UjianTautanPage() {
   if (sudah || terkirim) {
     return (
       <div className="max-w-lg mx-auto mt-16 text-center space-y-3 px-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Toko Bekon</p>
+        <div className="flex justify-center">
+          <Merek logo="h-12 w-auto" nama="text-lg" />
+        </div>
         <h1 className="text-2xl font-bold text-gray-900">Terima kasih, {undangan.nama}</h1>
         <p className="text-sm text-gray-600">Jawaban sudah terkirim. Hasilnya dilihat oleh toko.</p>
       </div>
@@ -117,7 +120,8 @@ export default function UjianTautanPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 p-4 sm:p-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Tes rekrutmen · Toko Bekon</p>
+        <Merek logo="h-10 w-auto" nama="text-base" />
+        <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-merek-biru-tua">Tes rekrutmen</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">{labelPaket[paket]}</h1>
         <p className="text-sm text-gray-500 mt-1">
           {undangan.nama} · {posisi?.judul}. Jawab semua soal lalu kirim. Halaman ini tidak memakai akun toko.

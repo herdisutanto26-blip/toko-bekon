@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Merek } from "@/components/Merek";
 import { db } from "@/lib/api";
 import { formatRp, sisaTagihan } from "@/lib/format";
 
@@ -35,6 +36,9 @@ export default function NotaBeliPage() {
 
   return (
     <div className="max-w-xl bg-white border border-gray-200 rounded-xl p-6">
+      <div className="mb-4 border-b border-gray-200 pb-4">
+        <Merek logo="h-14 w-auto" nama="text-xl" />
+      </div>
       <h1 className="text-xl font-bold text-gray-800">{nota.nomor_po}</h1>
       <p className="text-sm text-gray-500 mb-4">{nota.tanggal} · {nota.supplier?.nama}</p>
       <table className="w-full text-sm mb-4">
