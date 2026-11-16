@@ -123,7 +123,7 @@ export default function NotaJualPage() {
         const row = data as unknown as Nota | null;
         setNota(row);
         try {
-          const tugas: Promise<void>[] = [];
+          const tugas: PromiseLike<void>[] = [];
           tugas.push(
             db()
               .from("profil")
