@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import InputUang from "@/components/InputUang";
 import { supabase } from "@/lib/supabase";
 import type { Produk, ProdukKemasan, KategoriProduk, Satuan } from "@/lib/types";
 
@@ -166,20 +167,18 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-900">Harga Beli</label>
-              <input
-                type="number"
+              <InputUang
                 value={form.harga_beli}
-                onChange={(e) => set("harga_beli", e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                onChange={(nilai) => set("harga_beli", nilai === "" ? 0 : Number(nilai))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-900">Harga Jual</label>
-              <input
-                type="number"
+              <InputUang
                 value={form.harga_jual}
-                onChange={(e) => set("harga_jual", e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                onChange={(nilai) => set("harga_jual", nilai === "" ? 0 : Number(nilai))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
             <div>

@@ -14,7 +14,7 @@ type Nota = {
   status_bayar: string;
   catatan: string | null;
   supplier: { nama: string } | null;
-  pembelian_item: { qty: number; harga_satuan: number; subtotal: number; produk: { nama: string } | null }[];
+  pembelian_item: { qty: number; satuan: string | null; harga_satuan: number; subtotal: number; produk: { nama: string } | null }[];
   retur_pembelian: { total: number }[];
 };
 
@@ -25,7 +25,7 @@ export default function NotaBeliPage() {
   useEffect(() => {
     db()
       .from("pembelian")
-      .select("nomor_po,tanggal,total,dibayar,status_bayar,catatan,supplier(nama),pembelian_item(qty,harga_satuan,subtotal,produk(nama)),retur_pembelian(total)")
+      .select("nomor_po,tanggal,total,dibayar,status_bayar,catatan,supplier(nama),pembelian_item(qty,satuan,harga_satuan,subtotal,produk(nama)),retur_pembelian(total)")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => setNota(data as unknown as Nota | null));
@@ -46,7 +46,7 @@ export default function NotaBeliPage() {
           {nota.pembelian_item.map((item, i) => (
             <tr key={i} className="border-t border-gray-100">
               <td className="py-2">{item.produk?.nama}</td>
-              <td className="text-right">{item.qty} × {formatRp(item.harga_satuan)}</td>
+              <td className="text-right">{item.qty}{item.satuan ? ` ${item.satuan}` : ""} × {formatRp(item.harga_satuan)}</td>
               <td className="text-right">{formatRp(item.subtotal)}</td>
             </tr>
           ))}

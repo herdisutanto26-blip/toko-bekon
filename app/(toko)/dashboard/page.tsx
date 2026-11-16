@@ -7,7 +7,8 @@ import { formatRp, sisaTagihan, todayIso } from "@/lib/format";
 export default function DashboardPage() {
   const [jualHari, setJualHari] = useState(0);
   const [menipis, setMenipis] = useState<{ nama: string; stok: number }[]>([]);
-  const [piutang, setPiutang] = useState(0);
+  const [piutangUmum, setPiutangUmum] = useState(0);
+  const [piutangBekon, setPiutangBekon] = useState(0);
   const [hutang, setHutang] = useState(0);
   const [terakhir, setTerakhir] = useState<{ nomor_nota: string; grand_total: number }[]>([]);
 
@@ -29,11 +30,11 @@ export default function DashboardPage() {
           .map((p) => ({ nama: p.nama, stok: Number(p.stok) }))
       );
     });
-    db().from("penjualan").select("grand_total,dibayar,retur_penjualan(total)").then(({ data }) => {
-      setPiutang(
-        ((data ?? []) as { grand_total: number; dibayar: number; retur_penjualan: { total: number }[] }[])
-          .reduce((s, r) => s + sisaTagihan(r.grand_total, r.dibayar, r.retur_penjualan.reduce((a, x) => a + Number(x.total), 0)), 0)
-      );
+    db().from("penjualan").select("grand_total,dibayar,bekon_po_id,retur_penjualan(total)").then(({ data }) => {
+      const baris = (data ?? []) as { grand_total: number; dibayar: number; bekon_po_id: string | null; retur_penjualan: { total: number }[] }[];
+      const sisa = (r: (typeof baris)[number]) => sisaTagihan(r.grand_total, r.dibayar, r.retur_penjualan.reduce((a, x) => a + Number(x.total), 0));
+      setPiutangUmum(baris.filter((r) => !r.bekon_po_id).reduce((s, r) => s + sisa(r), 0));
+      setPiutangBekon(baris.filter((r) => r.bekon_po_id).reduce((s, r) => s + sisa(r), 0));
     });
     db().from("pembelian").select("total,dibayar,retur_pembelian(total)").then(({ data }) => {
       setHutang(
@@ -46,7 +47,8 @@ export default function DashboardPage() {
   const kartu = [
     ["Penjualan hari ini", formatRp(jualHari), "text-green-600"],
     ["Stok menipis", `${menipis.length} produk`, "text-red-600"],
-    ["Piutang belum lunas", formatRp(piutang), "text-yellow-600"],
+    ["Piutang umum", formatRp(piutangUmum), "text-yellow-600"],
+    ["Piutang Bekon", formatRp(piutangBekon), "text-merek-biru-tua"],
     ["Hutang belum lunas", formatRp(hutang), "text-orange-600"],
   ] as const;
 

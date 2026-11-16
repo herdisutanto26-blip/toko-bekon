@@ -47,7 +47,10 @@ export const menuToko: GrupMenu[] = [
   },
   {
     group: "Pengaturan",
-    items: [{ href: "/akses", label: "Akses & Akun" }],
+    items: [
+      { href: "/pengaturan", label: "Data toko" },
+      { href: "/akses", label: "Akses & Akun" },
+    ],
   },
 ];
 
@@ -68,6 +71,7 @@ export const aksesBawaan: Record<string, Peran[]> = {
   "/master": ["admin"],
   "/sdm/rekrutmen": ["admin"],
   "/sdm/karyawan": ["admin"],
+  "/pengaturan": ["admin"],
   "/akses": ["admin"],
 };
 

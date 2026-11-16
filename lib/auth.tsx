@@ -182,6 +182,7 @@ export function boleh(user: SesiPengguna, href: string) {
     return href === "/uji" || href.startsWith("/uji/");
   }
   if (user.peran === "admin" && (href === "/akses" || href.startsWith("/akses/"))) return true;
+  if (user.peran === "admin" && (href === "/pengaturan" || href.startsWith("/pengaturan/"))) return true;
   if (user.menu_izin) {
     return user.menu_izin.some((k) => href === k || href.startsWith(k + "/"));
   }

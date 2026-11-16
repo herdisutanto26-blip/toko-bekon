@@ -2,9 +2,15 @@
 -- Jalankan sekali di SQL Editor proyek Supabase bekon-pro.
 
 alter table toko.penjualan add column if not exists bekon_po_id uuid;
+alter table toko.penjualan add column if not exists bekon_proyek_id uuid;
+alter table toko.penjualan add column if not exists kode_proyek text;
+alter table toko.penjualan add column if not exists nama_proyek text;
 create unique index if not exists penjualan_bekon_po_uidx
   on toko.penjualan (bekon_po_id)
   where bekon_po_id is not null;
+create index if not exists penjualan_bekon_proyek_idx
+  on toko.penjualan (bekon_proyek_id)
+  where bekon_proyek_id is not null;
 
 create or replace function public.daftar_po_toko_bekon()
 returns table (
@@ -69,7 +75,9 @@ declare
   v_konv numeric;
   v_stok numeric;
   v_total numeric := 0;
+  v_proyek_id uuid;
   v_proyek text;
+  v_nama_proyek text;
   v_pengajuan text;
   v_catatan text;
 begin
@@ -86,10 +94,19 @@ begin
 
   select id into v_id from toko.penjualan where bekon_po_id = p_po_id;
   if found then
+    update toko.penjualan j
+    set bekon_proyek_id = p.id,
+        kode_proyek = p.code,
+        nama_proyek = p.name
+    from public.projects p
+    where j.id = v_id
+      and p.id = v_po.project_id
+      and j.bekon_proyek_id is null;
     return v_id;
   end if;
 
-  select code into v_proyek from public.projects where id = v_po.project_id;
+  select id, code, name into v_proyek_id, v_proyek, v_nama_proyek
+  from public.projects where id = v_po.project_id;
   select request_number into v_pengajuan
   from public.material_requests where id = v_po.material_request_id;
 
@@ -113,7 +130,8 @@ begin
 
   v_id := gen_random_uuid();
   insert into toko.penjualan (
-    id, nomor_nota, tanggal, pelanggan_id, catatan, dicatat_oleh, bekon_po_id
+    id, nomor_nota, tanggal, pelanggan_id, catatan, dicatat_oleh, bekon_po_id,
+    bekon_proyek_id, kode_proyek, nama_proyek
   )
   values (
     v_id,
@@ -122,7 +140,10 @@ begin
     v_pelanggan,
     v_catatan,
     'Bekon Pro',
-    p_po_id
+    p_po_id,
+    v_proyek_id,
+    v_proyek,
+    v_nama_proyek
   );
 
   for v_item in
@@ -201,6 +222,19 @@ begin
   return v_id;
 end;
 $$;
+
+update toko.penjualan j
+set bekon_proyek_id = o.project_id,
+    kode_proyek = p.code,
+    nama_proyek = p.name
+from public.material_purchase_orders o
+join public.projects p on p.id = o.project_id
+where j.bekon_po_id = o.id
+  and (
+    j.bekon_proyek_id is distinct from o.project_id
+    or j.kode_proyek is distinct from p.code
+    or j.nama_proyek is distinct from p.name
+  );
 
 grant execute on function public.daftar_po_toko_bekon() to anon, authenticated, service_role;
 grant execute on function public.sinkron_penjualan_toko_bekon(uuid) to anon, authenticated, service_role;
