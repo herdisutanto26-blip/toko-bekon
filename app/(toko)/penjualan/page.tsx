@@ -17,6 +17,7 @@ type Row = {
   dibayar: number;
   status_bayar: string;
   bekon_po_id: string | null;
+  jatuh_tempo: string | null;
   kode_proyek: string | null;
   nama_proyek: string | null;
   nama_pemilik: string | null;
@@ -24,7 +25,7 @@ type Row = {
   retur_penjualan: { total: number }[];
 };
 
-const KOLOM = "id,nomor_nota,tanggal,grand_total,dibayar,status_bayar,bekon_po_id,kode_proyek,nama_proyek,nama_pemilik,pelanggan(nama),retur_penjualan(total)";
+const KOLOM = "id,nomor_nota,tanggal,jatuh_tempo,grand_total,dibayar,status_bayar,bekon_po_id,kode_proyek,nama_proyek,nama_pemilik,pelanggan(nama),retur_penjualan(total)";
 
 function teksAman(kata: string) {
   return kata.trim().toLowerCase().replace(/[%_,().*\\"]/g, " ").replace(/\s+/g, " ").trim();
@@ -339,7 +340,7 @@ function DaftarBekon({ rows, onPilih, kosong }: { rows: Row[]; onPilih: (id: str
                   <button key={row.id} type="button" onClick={() => onPilih(row.id)} className="flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm first:border-t-0 hover:bg-gray-50">
                     <span>
                       <span className="font-medium text-merek-biru-tua">{row.nomor_nota}</span>
-                      <span className="ml-2 text-gray-500">{row.tanggal}</span>
+                      <span className="ml-2 text-gray-500">{row.tanggal}{row.jatuh_tempo ? ` · tempo ${row.jatuh_tempo}` : ""}</span>
                     </span>
                     <span className="text-gray-800">{formatRp(row.grand_total)} · sisa {formatRp(sisaNota)}</span>
                   </button>

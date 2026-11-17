@@ -70,6 +70,9 @@ export function pesanError(message: string) {
   if (/catat_pelunasan_banyak|atur_jatuh_tempo|jatuh_tempo|jurnal_baris/i.test(message)) {
     return "Jurnal pelunasan belum dipasang. Jalankan file supabase/bayar-jurnal.sql di SQL Editor proyek bekon-pro.";
   }
+  if (/ubah_penyesuaian_stok/i.test(message) && /does not exist|schema cache|42883|PGRST202/i.test(message)) {
+    return "Fungsi ubah penyesuaian stok belum dipasang. Jalankan file supabase/ubah-penyesuaian.sql di SQL Editor Supabase, lalu simpan lagi.";
+  }
   if (/catat_penyesuaian_stok|penyesuaian_stok/i.test(message) && /does not exist|schema cache|42883|42P01|PGRST202|PGRST205|PGRST204/i.test(message)) {
     return "Penyesuaian stok belum dipasang. Jalankan file supabase/persediaan.sql di SQL Editor Supabase, lalu simpan lagi.";
   }

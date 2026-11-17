@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { db, rpc, semua } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatRp, pesanError, todayIso } from "@/lib/format";
@@ -18,6 +18,7 @@ type BarisForm = { kunci: string; produkId: string; cari: string; qty: string };
 type Jenis = "masuk" | "keluar";
 
 type ItemNota = {
+  produk_id: string;
   qty: number;
   nilai: number;
   produk: { nama: string; kode_sku: string | null } | { nama: string; kode_sku: string | null }[] | null;
@@ -60,10 +61,13 @@ export default function PersediaanPage() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [jenis, setJenis] = useState<Jenis | null>(null);
+  const [ubahId, setUbahId] = useState("");
+  const [nomorUbah, setNomorUbah] = useState("");
   const [tanggal, setTanggal] = useState(todayIso());
   const [keterangan, setKeterangan] = useState("");
   const [baris, setBaris] = useState<BarisForm[]>([barisKosong()]);
   const [menyimpan, setMenyimpan] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function muat() {
     setMemuat(true);
@@ -79,7 +83,7 @@ export default function PersediaanPage() {
     setBarang(produk);
     const riwayat = await db()
       .from("penyesuaian_stok")
-      .select("id,nomor,tanggal,jenis,keterangan,dicatat_oleh,penyesuaian_stok_item(qty,nilai,produk(nama,kode_sku))")
+      .select("id,nomor,tanggal,jenis,keterangan,dicatat_oleh,penyesuaian_stok_item(produk_id,qty,nilai,produk(nama,kode_sku))")
       .order("tanggal", { ascending: false })
       .order("nomor", { ascending: false })
       .limit(30);
@@ -91,6 +95,10 @@ export default function PersediaanPage() {
     }
     setNota((riwayat.data ?? []) as Nota[]);
   }
+
+  useEffect(() => {
+    if (jenis) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [jenis, ubahId]);
 
   useEffect(() => {
     muat().catch((err: unknown) => {
@@ -111,9 +119,31 @@ export default function PersediaanPage() {
 
   function buka(mode: Jenis) {
     setJenis(mode);
+    setUbahId("");
+    setNomorUbah("");
     setTanggal(todayIso());
     setKeterangan("");
     setBaris([barisKosong()]);
+    setError("");
+    setInfo("");
+  }
+
+  function bukaUbah(item: Nota) {
+    const rinci = daftarItem(item.penyesuaian_stok_item);
+    setJenis(item.jenis);
+    setUbahId(item.id);
+    setNomorUbah(item.nomor);
+    setTanggal(item.tanggal);
+    setKeterangan(item.keterangan ?? "");
+    setBaris(rinci.length > 0 ? rinci.map((baris) => {
+      const produk = Array.isArray(baris.produk) ? baris.produk[0] : baris.produk;
+      return {
+        kunci: crypto.randomUUID(),
+        produkId: baris.produk_id,
+        cari: `${produk?.kode_sku ?? ""} ${produk?.nama ?? ""}`.trim(),
+        qty: String(Number(baris.qty)),
+      };
+    }) : [barisKosong()]);
     setError("");
     setInfo("");
   }
@@ -146,15 +176,26 @@ export default function PersediaanPage() {
     setMenyimpan(true);
     setError("");
     try {
-      const nomor = await rpc("catat_penyesuaian_stok", {
-        jenis,
-        tanggal,
-        keterangan: keterangan.trim(),
-        dicatat_oleh: user?.nama ?? "",
-        baris: isi,
-      });
-      setInfo(`${nomor} tersimpan. Nilai persediaan di neraca mengikuti stok yang baru.`);
+      const nomor = ubahId
+        ? await rpc("ubah_penyesuaian_stok", {
+          id: ubahId,
+          tanggal,
+          keterangan: keterangan.trim(),
+          dicatat_oleh: user?.nama ?? "",
+          baris: isi,
+        })
+        : await rpc("catat_penyesuaian_stok", {
+          jenis,
+          tanggal,
+          keterangan: keterangan.trim(),
+          dicatat_oleh: user?.nama ?? "",
+          baris: isi,
+        });
+      setInfo(ubahId
+        ? `${nomor} diperbarui. Stok dan nilai persediaan mengikuti perubahan itu.`
+        : `${nomor} tersimpan. Nilai persediaan di neraca mengikuti stok yang baru.`);
       setJenis(null);
+      setUbahId("");
       await muat();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan penyesuaian");
@@ -188,13 +229,16 @@ export default function PersediaanPage() {
 
       {jenis && (
         <form
+          ref={formRef}
           onSubmit={(e) => {
             e.preventDefault();
             simpan();
           }}
           className="mb-6 max-w-3xl rounded-xl border border-gray-200 bg-white p-4"
         >
-          <p className="mb-3 font-semibold text-gray-900">{jenis === "masuk" ? "Item masuk (IM)" : "Item keluar (IK)"}</p>
+          <p className="mb-3 font-semibold text-gray-900">
+            {ubahId ? `Ubah ${nomorUbah}` : jenis === "masuk" ? "Item masuk (IM)" : "Item keluar (IK)"}
+          </p>
           <div className="mb-3 grid gap-3 sm:grid-cols-2">
             <label className="text-sm text-gray-700">
               Tanggal
@@ -269,7 +313,7 @@ export default function PersediaanPage() {
             <button disabled={menyimpan} className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50">
               {menyimpan ? "Menyimpan..." : "Simpan"}
             </button>
-            <button type="button" onClick={() => setJenis(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-800">
+            <button type="button" onClick={() => { setJenis(null); setUbahId(""); }} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-800">
               Batal
             </button>
           </div>
@@ -326,7 +370,14 @@ export default function PersediaanPage() {
             const rinci = daftarItem(item.penyesuaian_stok_item);
             const total = rinci.reduce((s, baris) => s + Number(baris.nilai), 0);
             return (
-              <section key={item.id} className="rounded-xl border border-gray-200 bg-white p-4">
+              <section
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => bukaUbah(item)}
+                onKeyDown={(e) => { if (e.key === "Enter") bukaUbah(item); }}
+                className="cursor-pointer rounded-xl border border-gray-200 bg-white p-4 hover:bg-gray-50"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="font-semibold text-gray-900">{item.nomor}</p>
                   <p className="text-sm text-gray-600">{item.tanggal} · {item.jenis === "masuk" ? "Item masuk" : "Item keluar"}</p>

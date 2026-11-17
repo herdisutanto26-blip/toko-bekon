@@ -5,6 +5,8 @@ import { asetTetap, kasBank, kewajibanLain, type SaldoAkun } from "@/lib/saldo-a
 export { asetTetap, kasBank, kewajibanLain };
 export type { SaldoAkun };
 
+export const kodePersediaan = "1-1320";
+
 export const akunTagihan: SaldoAkun[] = [
   { kode: "1-1300", nama: "Piutang umum", saldo: 0 },
   { kode: "1-1310", nama: "Piutang Bekon", saldo: 0 },
@@ -180,6 +182,13 @@ export async function muatRugiLaba(dari: string, sampai: string): Promise<AngkaR
     hppUmum: jumlah(item.filter((r) => !milikBekon(r.penjualan)).map((r) => Number(r.qty) * Number(r.harga_beli))),
     hppBekon: jumlah(item.filter((r) => milikBekon(r.penjualan)).map((r) => Number(r.qty) * Number(r.harga_beli))),
   };
+}
+
+export async function nilaiPersediaan() {
+  const stok = await semua<{ stok: number; harga_beli: number }>((from, to) =>
+    db().from("produk").select("stok,harga_beli").eq("aktif", true).order("id").range(from, to)
+  );
+  return stok.reduce((s, row) => s + Number(row.stok) * Number(row.harga_beli), 0);
 }
 
 export async function muatNeraca(): Promise<AngkaNeraca> {

@@ -46,10 +46,17 @@ from (values
   ('1-1172', 'Shopee jual', '1-1'),
   ('1-1300', 'Piutang umum', '1-1'),
   ('1-1310', 'Piutang Bekon', '1-1'),
+  ('1-1320', 'Persediaan', '1-1'),
   ('1-2310', 'Mobil pick up 2009', '1-2'),
   ('1-2400', 'Perlengkapan', '1-2'),
   ('2-2100', 'Hutang usaha', '2'),
-  ('2-3200', 'Setoran dimuka belum dijurnal', '2')
+  ('2-3200', 'Setoran dimuka belum dijurnal', '2'),
+  ('4-1000', 'Penjualan umum', '4'),
+  ('4-1010', 'Penjualan Bekon', '4'),
+  ('4-1020', 'Retur penjualan umum', '4'),
+  ('4-1030', 'Retur penjualan Bekon', '4'),
+  ('5-1000', 'Harga pokok umum', '5'),
+  ('5-1010', 'Harga pokok Bekon', '5')
 ) as v(kode, nama, induk)
 join toko.akun_perkiraan p on p.kode = v.induk
 on conflict (kode) do nothing;

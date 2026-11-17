@@ -3,20 +3,29 @@
 import { formatRp } from "@/lib/format";
 
 export function Baris({
+  kode,
   label,
   nilai,
   tebal,
   garis,
+  kedalaman = 0,
+  tanpaNilai,
 }: {
+  kode?: string;
   label: string;
-  nilai: number;
+  nilai?: number;
   tebal?: boolean;
   garis?: boolean;
+  kedalaman?: number;
+  tanpaNilai?: boolean;
 }) {
   return (
-    <div className={`flex justify-between gap-4 py-2 ${garis ? "border-t border-gray-200" : ""} ${tebal ? "font-semibold text-gray-900" : "text-gray-700"}`}>
-      <span>{label}</span>
-      <span className="tabular-nums">{formatRp(nilai)}</span>
+    <div
+      className={`flex justify-between gap-4 py-2 ${garis ? "border-t border-gray-200" : ""} ${tebal ? "font-semibold text-gray-900" : "text-gray-700"}`}
+      style={{ paddingLeft: kedalaman ? `${kedalaman * 1.1}rem` : undefined }}
+    >
+      <span>{kode ? `${kode}  ${label}` : label}</span>
+      {!tanpaNilai && <span className="tabular-nums">{formatRp(nilai ?? 0)}</span>}
     </div>
   );
 }
