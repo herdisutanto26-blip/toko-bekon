@@ -121,9 +121,56 @@ export default function BarangForm({
   }, [jual]);
 
   useEffect(() => {
-    if (!notaId || !jual) return;
+    if (!notaId) return;
     let batal = false;
     setSiap(false);
+    if (!jual) {
+      db()
+        .from("pembelian")
+        .select("nomor_po,tanggal,supplier_id,catatan,dibayar,total,pembelian_item(produk_id,qty,satuan,konversi,harga_satuan)")
+        .eq("id", notaId)
+        .maybeSingle()
+        .then(({ data, error: err }) => {
+          if (batal) return;
+          if (err || !data) {
+            setError(err?.message || "Pembelian tidak ditemukan");
+            setSiap(true);
+            return;
+          }
+          const row = data as {
+            nomor_po: string;
+            tanggal: string;
+            supplier_id: string | null;
+            catatan: string | null;
+            dibayar: number;
+            total: number;
+            pembelian_item: { produk_id: string; qty: number; satuan: string | null; konversi: number | null; harga_satuan: number }[];
+          };
+          const item = row.pembelian_item ?? [];
+          const pakai: Record<string, number> = {};
+          for (const barisItem of item) {
+            const konv = Number(barisItem.konversi) > 0 ? Number(barisItem.konversi) : 1;
+            pakai[barisItem.produk_id] = (pakai[barisItem.produk_id] ?? 0) + Number(barisItem.qty) * konv;
+          }
+          const lunas = Number(row.dibayar) + 0.001 >= Number(row.total);
+          setNomorNota(row.nomor_po);
+          setTanggal(row.tanggal);
+          setPihakId(row.supplier_id ?? "");
+          setCatatan(row.catatan ?? "");
+          setDibayar(lunas ? "" : String(Math.round(Number(row.dibayar) || 0)));
+          setBaris(item.length > 0 ? item.map((barisItem, i) => ({
+            key: `awal-${i}`,
+            produk_id: barisItem.produk_id,
+            satuan: barisItem.satuan ?? "",
+            konversi: String(Number(barisItem.konversi) > 0 ? barisItem.konversi : 1),
+            qty: String(barisItem.qty),
+            harga: String(Math.round(Number(barisItem.harga_satuan) || 0)),
+          })) : [{ key: "1", produk_id: "", satuan: "", konversi: "1", qty: "1", harga: "" }]);
+          setCadangan(pakai);
+          setSiap(true);
+        });
+      return () => { batal = true; };
+    }
     db()
       .from("penjualan")
       .select("nomor_nota,tanggal,pelanggan_id,catatan,diskon,dibayar,grand_total,jatuh_tempo,penjualan_item(produk_id,qty,satuan,konversi,harga_satuan)")
@@ -251,7 +298,7 @@ export default function BarangForm({
     }
     setSaving(true);
     try {
-      const id = await rpc(notaId ? "ubah_penjualan" : jual ? "simpan_penjualan" : "simpan_pembelian", {
+      const id = await rpc(notaId ? (jual ? "ubah_penjualan" : "ubah_pembelian") : jual ? "simpan_penjualan" : "simpan_pembelian", {
         id: notaId,
         tanggal,
         pelanggan_id: jual ? pihakId : undefined,
@@ -357,6 +404,19 @@ export default function BarangForm({
                   Hapus
                 </button>
               )}
+              {item && !jual && notaId && (() => {
+                const lama = cadangan[b.produk_id] ?? 0;
+                const sekarang = baris
+                  .filter((r) => r.produk_id === b.produk_id)
+                  .reduce((s, r) => s + Number(r.qty || 0) * (Number(r.konversi) > 0 ? Number(r.konversi) : 1), 0);
+                const kurang = lama - sekarang;
+                if (kurang <= item.stok + 0.000001) return null;
+                return (
+                  <p className="col-span-12 text-xs text-red-600">
+                    Stok {item.nama} tinggal {formatJumlah(item.stok)}, pengurangan melebihi stok
+                  </p>
+                );
+              })()}
               {item && jual && (() => {
                 const konv = Number(b.konversi) > 0 ? Number(b.konversi) : 1;
                 const terpakai = baris

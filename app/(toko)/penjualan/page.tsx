@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BarangForm from "@/components/BarangForm";
 import { PilihBuku, type Buku } from "@/components/PilihBuku";
-import { db, semua } from "@/lib/api";
-import { formatRp, labelProyek, sisaTagihan } from "@/lib/format";
+import SaringTanggal from "@/components/SaringTanggal";
+import { db } from "@/lib/api";
+import { formatRp, labelProyek, pesanError, sisaTagihan } from "@/lib/format";
 
 type Row = {
   id: string;
@@ -23,9 +24,66 @@ type Row = {
   retur_penjualan: { total: number }[];
 };
 
+const KOLOM = "id,nomor_nota,tanggal,grand_total,dibayar,status_bayar,bekon_po_id,kode_proyek,nama_proyek,nama_pemilik,pelanggan(nama),retur_penjualan(total)";
+
+function teksAman(kata: string) {
+  return kata.trim().toLowerCase().replace(/[%_,().*\\"]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function dasarPenjualan(buku: Buku, dari: string, sampai: string) {
+  let q = db().from("penjualan").select(KOLOM);
+  q = buku === "bekon" ? q.not("bekon_po_id", "is", null) : q.is("bekon_po_id", null);
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+  return q.order("tanggal", { ascending: false }).order("id");
+}
+
+function potong<T>(daftar: T[], ukuran: number) {
+  const hasil: T[][] = [];
+  for (let i = 0; i < daftar.length; i += ukuran) hasil.push(daftar.slice(i, i + ukuran));
+  return hasil;
+}
+
+async function ambilPenjualan(buku: Buku, kata: string, dari: string, sampai: string) {
+  const cari = teksAman(kata);
+  const saring = Boolean(dari || sampai);
+  const batas = cari || saring ? 500 : buku === "bekon" ? 200 : 40;
+  if (!cari) {
+    const { data, error } = await dasarPenjualan(buku, dari, sampai).limit(batas);
+    if (error) throw new Error(pesanError(error.message));
+    const rows = (data ?? []) as unknown as Row[];
+    return { rows, jumlah: rows.length };
+  }
+
+  const { data: pihak, error: errPihak } = await db().from("pelanggan").select("id").ilike("nama", `%${cari}%`).limit(500);
+  if (errPihak) throw new Error(pesanError(errPihak.message));
+  const ids = ((pihak ?? []) as { id: string }[]).map((p) => p.id);
+  const pola = `"%${cari}%"`;
+  const teks = ["nomor_nota", "kode_proyek", "nama_pemilik"].map((kolom) => `${kolom}.ilike.${pola}`);
+  if ("umum".includes(cari)) teks.push("pelanggan_id.is.null");
+  const permintaan = [
+    dasarPenjualan(buku, dari, sampai).or(teks.join(",")).limit(batas),
+    ...potong(ids, 80).map((bagian) => dasarPenjualan(buku, dari, sampai).in("pelanggan_id", bagian).limit(batas)),
+  ];
+  const hasil = await Promise.all(permintaan);
+  const gabung = new Map<string, Row>();
+  let penuh = false;
+  for (const bagian of hasil) {
+    if (bagian.error) throw new Error(pesanError(bagian.error.message));
+    const daftar = (bagian.data ?? []) as unknown as Row[];
+    if (daftar.length >= batas) penuh = true;
+    for (const row of daftar) gabung.set(row.id, row);
+  }
+  const rows = [...gabung.values()]
+    .sort((a, b) => b.tanggal.localeCompare(a.tanggal) || a.id.localeCompare(b.id))
+    .slice(0, batas);
+  return { rows, jumlah: penuh ? batas + 1 : rows.length };
+}
+
 export default function PenjualanPage() {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
+  const [jumlah, setJumlah] = useState(0);
   const [buku, setBuku] = useState<Buku>("umum");
   const [cari, setCari] = useState("");
   const [memuat, setMemuat] = useState(true);
@@ -33,38 +91,44 @@ export default function PenjualanPage() {
   const [tambah, setTambah] = useState(false);
   const [ubahId, setUbahId] = useState<string | null>(null);
   const [pesan, setPesan] = useState("");
+  const [segar, setSegar] = useState(0);
+  const [dari, setDari] = useState("");
+  const [sampai, setSampai] = useState("");
 
   function muat() {
-    setMemuat(true);
-    semua<Row>((dari, sampai) =>
-      db()
-        .from("penjualan")
-        .select("id,nomor_nota,tanggal,grand_total,dibayar,status_bayar,bekon_po_id,kode_proyek,nama_proyek,nama_pemilik,pelanggan(nama),retur_penjualan(total)")
-        .order("tanggal", { ascending: false })
-        .order("id")
-        .range(dari, sampai)
-    )
-      .then((data) => { setRows(data); setError(""); })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setMemuat(false));
+    setSegar((n) => n + 1);
   }
 
-  useEffect(() => { muat(); }, []);
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("buku") === "bekon") setBuku("bekon");
   }, []);
 
-  const milik = rows.filter((r) => (buku === "bekon" ? Boolean(r.bekon_po_id) : !r.bekon_po_id));
+  useEffect(() => {
+    let batal = false;
+    const timer = setTimeout(() => {
+      setMemuat(true);
+      ambilPenjualan(buku, cari, dari, sampai)
+        .then((hasil) => {
+          if (batal) return;
+          setRows(hasil.rows);
+          setJumlah(hasil.jumlah);
+          setError("");
+        })
+        .catch((err: Error) => {
+          if (!batal) setError(err.message);
+        })
+        .finally(() => {
+          if (!batal) setMemuat(false);
+        });
+    }, cari.trim() ? 300 : 0);
+    return () => {
+      batal = true;
+      clearTimeout(timer);
+    };
+  }, [buku, cari, dari, sampai, segar]);
+
   const kata = cari.trim().toLowerCase();
-  const cocok = kata
-    ? milik.filter((r) => {
-        const proyek = `${r.kode_proyek ?? ""} ${r.nama_pemilik ?? ""}`.toLowerCase();
-        return (r.pelanggan?.nama ?? "umum").toLowerCase().includes(kata) || r.nomor_nota.toLowerCase().includes(kata) || proyek.includes(kata);
-      })
-    : buku === "umum"
-      ? milik.slice(0, 40)
-      : milik;
-  const daftar = cocok.slice(0, 200).map((r) => ({
+  const daftar = rows.map((r) => ({
           id: r.id,
           href: `/penjualan/${r.id}`,
           nomor: r.nomor_nota,
@@ -89,31 +153,38 @@ export default function PenjualanPage() {
           </button>
         )}
       </div>
-      <PilihBuku nilai={buku} onPilih={(nilai) => { setBuku(nilai); setCari(""); setTambah(false); setUbahId(null); }} />
+      <PilihBuku nilai={buku} onPilih={(nilai) => { setBuku(nilai); setCari(""); setDari(""); setSampai(""); setTambah(false); setUbahId(null); }} />
       {buku === "bekon" && (
         <p className="mb-4 text-sm text-gray-500">
-          Nota Bekon dibuat dari pesanan yang ditarik di menu Dari Bekon, lalu dikelompokkan per proyek.
+          Nota Bekon dibuat dari pesanan yang sudah dicek di menu Pesanan Penjualan, lalu dikelompokkan per proyek.
         </p>
       )}
       {pesan && <p className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">Tersimpan: {pesan}</p>}
-      <input
-        type="text"
-        placeholder={buku === "bekon" ? "Cari nota atau proyek..." : "Cari pelanggan..."}
-        value={cari}
-        onChange={(e) => setCari(e.target.value)}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-72 mb-4 focus:outline-none focus:ring-2 focus:ring-orange-400"
-      />
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <input
+          type="text"
+          placeholder={buku === "bekon" ? "Cari nota atau proyek..." : "Cari pelanggan..."}
+          value={cari}
+          onChange={(e) => setCari(e.target.value)}
+          className="w-72 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+        <SaringTanggal dari={dari} sampai={sampai} onDari={setDari} onSampai={setSampai} />
+      </div>
       {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
       {memuat ? (
         <p className="text-sm text-gray-500 mb-4">Memuat data...</p>
       ) : (
         <>
-          {kata && <p className="text-xs text-gray-400 mb-2">{cocok.length} nota{cocok.length > 200 ? ", menampilkan 200 pertama" : ""}</p>}
+          {(kata || dari || sampai) && <p className="text-xs text-gray-400 mb-2">{jumlah} nota{jumlah >= 500 ? ", menampilkan 500 pertama" : ""}</p>}
           {buku === "bekon" ? (
-            <DaftarBekon rows={cocok.slice(0, 200)} />
+            <DaftarBekon
+              rows={rows}
+              kosong={kata || dari || sampai ? "Tidak ada nota pada saringan ini" : undefined}
+              onPilih={(id) => { setPesan(""); setTambah(false); setUbahId(id); }}
+            />
           ) : (
             <Daftar
-              kosong={kata ? "Tidak ada pelanggan yang cocok" : "Belum ada nota penjualan umum"}
+              kosong={kata || dari || sampai ? "Tidak ada nota pada saringan ini" : "Belum ada nota penjualan umum"}
               rows={daftar}
               onPilih={(id) => { setPesan(""); setTambah(false); setUbahId(id); }}
             />
@@ -147,7 +218,7 @@ export default function PenjualanPage() {
           </div>
         </div>
       )}
-      {ubahId && buku === "umum" && (
+      {ubahId && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4">
           <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
@@ -230,9 +301,9 @@ export function Daftar({
   );
 }
 
-function DaftarBekon({ rows }: { rows: Row[] }) {
+function DaftarBekon({ rows, onPilih, kosong }: { rows: Row[]; onPilih: (id: string) => void; kosong?: string }) {
   if (rows.length === 0) {
-    return <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">Belum ada nota penjualan Bekon</div>;
+    return <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">{kosong ?? "Belum ada nota penjualan Bekon"}</div>;
   }
   const urutan: string[] = [];
   const map = new Map<string, Row[]>();
@@ -265,13 +336,13 @@ function DaftarBekon({ rows }: { rows: Row[] }) {
               {grup.map((row) => {
                 const sisaNota = sisaTagihan(row.grand_total, row.dibayar, (row.retur_penjualan ?? []).reduce((a, item) => a + Number(item.total), 0));
                 return (
-                  <Link key={row.id} href={`/penjualan/${row.id}`} className="flex items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-sm first:border-t-0 hover:bg-gray-50">
+                  <button key={row.id} type="button" onClick={() => onPilih(row.id)} className="flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm first:border-t-0 hover:bg-gray-50">
                     <span>
                       <span className="font-medium text-merek-biru-tua">{row.nomor_nota}</span>
                       <span className="ml-2 text-gray-500">{row.tanggal}</span>
                     </span>
                     <span className="text-gray-800">{formatRp(row.grand_total)} · sisa {formatRp(sisaNota)}</span>
-                  </Link>
+                  </button>
                 );
               })}
             </div>

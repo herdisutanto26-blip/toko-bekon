@@ -207,6 +207,9 @@ begin
   elsif prefix = 'RJ' then
     select count(*) + 1 into n from toko.retur_penjualan
       where nomor_retur like prefix || '-' || to_char(current_date, 'YYMMDD') || '-%';
+  elsif prefix = 'SO' then
+    select count(*) + 1 into n from toko.pesanan_penjualan
+      where nomor_so like prefix || '-' || to_char(current_date, 'YYMMDD') || '-%';
   else
     select count(*) + 1 into n from toko.retur_pembelian
       where nomor_retur like prefix || '-' || to_char(current_date, 'YYMMDD') || '-%';

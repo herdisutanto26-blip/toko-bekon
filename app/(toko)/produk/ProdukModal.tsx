@@ -1,25 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import InputUang from "@/components/InputUang";
 import { supabase } from "@/lib/supabase";
 import type { Produk, ProdukKemasan, KategoriProduk, Satuan } from "@/lib/types";
 
-async function generateSKU(kategoriId: string, kategoriList: KategoriProduk[]): Promise<string> {
-  const kategori = kategoriList.find((k) => k.id === kategoriId);
-  const prefix = kategori
-    ? "BKN-" + kategori.nama.substring(0, 3).toUpperCase().replace(/\s/g, "")
-    : "BKN-PRD";
+function huruf(kata: string) {
+  return kata
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 2);
+}
 
-  // hitung berapa produk dengan prefix ini sudah ada
-  const { count } = await supabase
-    .schema("toko")
-    .from("produk")
-    .select("id", { count: "exact", head: true })
-    .ilike("kode_sku", `${prefix}%`);
+function kodeDariNama(nama: string) {
+  const kata = nama.trim().split(/\s+/).map(huruf).filter((bagian) => bagian.length > 0);
+  if (kata.length === 0) return "";
+  if (kata.length === 1) {
+    const penuh = nama.trim().split(/\s+/)[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    return penuh.slice(0, 4);
+  }
+  return `${kata[0]}${kata[1]}`;
+}
 
-  const nomor = String((count ?? 0) + 1).padStart(3, "0");
-  return `${prefix}-${nomor}`;
+async function buatSku(nama: string) {
+  const kode = kodeDariNama(nama);
+  if (kode.length < 2) return "";
+  const toko = supabase.schema("toko");
+  const { count } = await toko.from("produk").select("id", { count: "exact", head: true });
+  let nomor = (count ?? 0) + 1;
+  for (let i = 0; i < 30; i += 1) {
+    const sku = `${kode}.${String(nomor).padStart(4, "0")}`;
+    const { data } = await toko.from("produk").select("id").eq("kode_sku", sku).limit(1);
+    if (!data?.length) return sku;
+    nomor += 1;
+  }
+  return `${kode}.${nomor}`;
+}
+
+function ambilLabel(teks: string, label: string) {
+  const re = new RegExp(`\\b${label}\\s*:\\s*([^\\n]+?)(?=\\s*(?:merek|supplier)\\s*:|$)`, "i");
+  const ketemu = teks.match(re);
+  if (!ketemu || ketemu.index == null) return { nilai: "", sisa: teks };
+  const nilai = ketemu[1].replace(/[.\s]+$/, "").trim();
+  const sisa = `${teks.slice(0, ketemu.index)} ${teks.slice(ketemu.index + ketemu[0].length)}`.replace(/\s{2,}/g, " ").trim();
+  return { nilai, sisa };
+}
+
+function pisahCatatan(teks: string) {
+  const supplier = ambilLabel(teks, "supplier");
+  const merek = ambilLabel(supplier.sisa, "merek");
+  const sisa = merek.sisa.replace(/^[.\s]+|[.\s]+$/g, "").trim();
+  const ada = Boolean(merek.nilai || supplier.nilai);
+  return {
+    merek: merek.nilai,
+    supplier: supplier.nilai,
+    spek: ada ? sisa : "",
+    keterangan: ada ? "" : teks.trim(),
+  };
 }
 
 type Props = {
@@ -30,10 +69,15 @@ type Props = {
   onSaved: () => void;
 };
 
-export default function ProdukModal({ editData, kategoriList, satuanList, onClose, onSaved }: Props) {
-  const [form, setForm] = useState({
+function nilaiAwal(editData: Produk | null) {
+  const pecah = pisahCatatan(editData?.keterangan ?? "");
+  const sudahAda = Boolean(editData?.merek || editData?.spek || editData?.nama_supplier);
+  return {
     kode_sku: editData?.kode_sku ?? "",
     nama: editData?.nama ?? "",
+    merek: editData?.merek || pecah.merek,
+    spek: editData?.spek || pecah.spek,
+    nama_supplier: editData?.nama_supplier || pecah.supplier,
     kategori_id: editData?.kategori_id ?? "",
     satuan_id: editData?.satuan_id ?? "",
     harga_beli: editData?.harga_beli ?? 0,
@@ -41,19 +85,49 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
     stok_minimum: editData?.stok_minimum ?? 0,
     stok: editData?.stok ?? 0,
     punya_varian: editData?.punya_varian ?? false,
-    keterangan: editData?.keterangan ?? "",
-  });
+    keterangan: sudahAda ? (editData?.keterangan ?? "") : pecah.keterangan,
+  };
+}
+
+export default function ProdukModal({ editData, kategoriList, satuanList, onClose, onSaved }: Props) {
+  const [form, setForm] = useState(() => nilaiAwal(editData));
+  const [supplierPilihan, setSupplierPilihan] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [generatingSku, setGeneratingSku] = useState(false);
   const [error, setError] = useState("");
+  const skuOtomatis = useRef(editData?.kode_sku ?? "");
+  const skuTerkunci = useRef(Boolean(editData?.kode_sku));
+
+  useEffect(() => {
+    supabase.schema("toko").from("supplier").select("nama").eq("aktif", true).order("nama").limit(1000)
+      .then(({ data }) => setSupplierPilihan(((data ?? []) as { nama: string }[]).map((row) => row.nama).filter(Boolean)));
+  }, []);
+
+  useEffect(() => {
+    if (skuTerkunci.current) return;
+    let batal = false;
+    const timer = setTimeout(() => {
+      buatSku(form.nama).then((sku) => {
+        if (batal || !sku || skuTerkunci.current) return;
+        skuOtomatis.current = sku;
+        setForm((sekarang) => ({ ...sekarang, kode_sku: sku }));
+      });
+    }, 400);
+    return () => {
+      batal = true;
+      clearTimeout(timer);
+    };
+  }, [form.nama]);
 
   async function handleGenerateSKU() {
-    if (!form.kategori_id) { setError("Pilih kategori dulu sebelum generate SKU"); return; }
     setGeneratingSku(true);
     setError("");
-    const sku = await generateSKU(form.kategori_id, kategoriList);
-    set("kode_sku", sku);
+    const sku = await buatSku(form.nama);
     setGeneratingSku(false);
+    if (!sku) { setError("Isi nama produk dulu, minimal dua huruf"); return; }
+    skuOtomatis.current = sku;
+    skuTerkunci.current = false;
+    set("kode_sku", sku);
   }
 
   function set(key: string, value: unknown) {
@@ -65,9 +139,13 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
     setSaving(true);
     setError("");
 
+    const kode = form.kode_sku.trim() || await buatSku(form.nama);
     const payload = {
-      kode_sku: form.kode_sku || null,
+      kode_sku: kode || null,
       nama: form.nama.trim(),
+      merek: form.merek.trim() || null,
+      spek: form.spek.trim() || null,
+      nama_supplier: form.nama_supplier.trim() || null,
       kategori_id: form.kategori_id || null,
       satuan_id: form.satuan_id || null,
       harga_beli: Number(form.harga_beli),
@@ -75,7 +153,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
       stok_minimum: Number(form.stok_minimum),
       ...(editData ? {} : { stok: Number(form.stok) }),
       punya_varian: form.punya_varian,
-      keterangan: form.keterangan || null,
+      keterangan: form.keterangan.trim() || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -85,7 +163,12 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
       : await toko.from("produk").insert(payload);
 
     setSaving(false);
-    if (err) { setError(err.message); return; }
+    if (err) {
+      setError(/merek|spek|nama_supplier|schema cache|PGRST204/i.test(err.message)
+        ? "Kolom merek, spek, dan supplier belum ada di database. Jalankan file supabase/produk-merek.sql di SQL Editor Supabase, lalu simpan lagi."
+        : err.message);
+      return;
+    }
     onSaved();
   }
 
@@ -113,26 +196,63 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
             />
           </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Merek</label>
+              <input
+                value={form.merek}
+                onChange={(e) => set("merek", e.target.value)}
+                placeholder="aplus"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-900">Supplier</label>
+              <input
+                value={form.nama_supplier}
+                onChange={(e) => set("nama_supplier", e.target.value)}
+                list="daftar-supplier"
+                placeholder="Nama supplier"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              <datalist id="daftar-supplier">
+                {supplierPilihan.map((nama) => <option key={nama} value={nama} />)}
+              </datalist>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-900">Spek</label>
+            <input
+              value={form.spek}
+              onChange={(e) => set("spek", e.target.value)}
+              placeholder="Ukuran, tipe, atau warna"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
           <div>
             <label className="mb-1 block text-sm font-semibold text-gray-900">Kode SKU</label>
             <div className="flex gap-2">
               <input
                 value={form.kode_sku}
-                onChange={(e) => set("kode_sku", e.target.value)}
-                placeholder="Kosongkan untuk generate otomatis"
+                onChange={(e) => {
+                  skuTerkunci.current = true;
+                  set("kode_sku", e.target.value);
+                }}
+                placeholder="Terisi otomatis dari nama"
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
               <button
                 type="button"
                 onClick={handleGenerateSKU}
                 disabled={generatingSku}
-                title="Generate SKU otomatis (pilih kategori dulu)"
                 className="px-3 py-2 text-xs font-medium bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 disabled:opacity-50 whitespace-nowrap"
               >
-                {generatingSku ? "..." : "Generate SKU"}
+                {generatingSku ? "..." : "Buat SKU"}
               </button>
             </div>
-            <p className="mt-1 text-sm font-medium text-gray-700">Pilih kategori dulu, lalu klik Generate SKU</p>
+            <p className="mt-1 text-sm font-medium text-gray-700">2 huruf kata pertama + 2 huruf kata kedua, titik, lalu nomor urut. Contoh aplus gipsum menjadi apgi.2218</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -201,6 +321,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
                 readOnly={!!editData}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 read-only:bg-gray-50"
               />
+              {editData && <p className="mt-1 text-xs text-gray-500">Perubahan stok dicatat di menu Persediaan.</p>}
             </div>
           </div>
 
@@ -235,6 +356,7 @@ export default function ProdukModal({ editData, kategoriList, satuanList, onClos
               value={form.keterangan}
               onChange={(e) => set("keterangan", e.target.value)}
               rows={2}
+              placeholder="Catatan lain. Merek, spek, dan supplier diisi di kolomnya sendiri."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>

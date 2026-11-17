@@ -21,6 +21,9 @@ export type Produk = {
   stok_minimum: number;
   punya_varian: boolean;
   aktif: boolean;
+  merek: string | null;
+  spek: string | null;
+  nama_supplier: string | null;
   keterangan: string | null;
   created_at: string;
   updated_at: string;

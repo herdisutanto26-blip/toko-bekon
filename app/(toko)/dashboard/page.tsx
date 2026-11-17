@@ -30,17 +30,17 @@ export default function DashboardPage() {
           .map((p) => ({ nama: p.nama, stok: Number(p.stok) }))
       );
     });
-    db().from("penjualan").select("grand_total,dibayar,bekon_po_id,retur_penjualan(total)").then(({ data }) => {
-      const baris = (data ?? []) as { grand_total: number; dibayar: number; bekon_po_id: string | null; retur_penjualan: { total: number }[] }[];
-      const sisa = (r: (typeof baris)[number]) => sisaTagihan(r.grand_total, r.dibayar, r.retur_penjualan.reduce((a, x) => a + Number(x.total), 0));
+    semua<{ grand_total: number; dibayar: number; bekon_po_id: string | null; retur_penjualan: { total: number }[] | null }>((dari, sampai) =>
+      db().from("penjualan").select("grand_total,dibayar,bekon_po_id,retur_penjualan(total)").neq("status_bayar", "lunas").order("id").range(dari, sampai)
+    ).then((baris) => {
+      const sisa = (r: (typeof baris)[number]) => sisaTagihan(r.grand_total, r.dibayar, (r.retur_penjualan ?? []).reduce((a, x) => a + Number(x.total), 0));
       setPiutangUmum(baris.filter((r) => !r.bekon_po_id).reduce((s, r) => s + sisa(r), 0));
       setPiutangBekon(baris.filter((r) => r.bekon_po_id).reduce((s, r) => s + sisa(r), 0));
     });
-    db().from("pembelian").select("total,dibayar,retur_pembelian(total)").then(({ data }) => {
-      setHutang(
-        ((data ?? []) as { total: number; dibayar: number; retur_pembelian: { total: number }[] }[])
-          .reduce((s, r) => s + sisaTagihan(r.total, r.dibayar, r.retur_pembelian.reduce((a, x) => a + Number(x.total), 0)), 0)
-      );
+    semua<{ total: number; dibayar: number; retur_pembelian: { total: number }[] | null }>((dari, sampai) =>
+      db().from("pembelian").select("total,dibayar,retur_pembelian(total)").neq("status_bayar", "lunas").order("id").range(dari, sampai)
+    ).then((data) => {
+      setHutang(data.reduce((s, r) => s + sisaTagihan(r.total, r.dibayar, (r.retur_pembelian ?? []).reduce((a, x) => a + Number(x.total), 0)), 0));
     });
   }, []);
 

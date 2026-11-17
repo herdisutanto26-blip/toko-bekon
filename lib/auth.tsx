@@ -184,7 +184,11 @@ export function boleh(user: SesiPengguna, href: string) {
   if (user.peran === "admin" && (href === "/akses" || href.startsWith("/akses/"))) return true;
   if (user.peran === "admin" && (href === "/pengaturan" || href.startsWith("/pengaturan/"))) return true;
   if (user.menu_izin) {
-    return user.menu_izin.some((k) => href === k || href.startsWith(k + "/"));
+    const cocok = user.menu_izin.some((k) => href === k || href.startsWith(k + "/"));
+    if (cocok) return true;
+    if ((href === "/pesanan" || href.startsWith("/pesanan/")) && user.menu_izin.includes("/dari-bekon")) return true;
+    if (href === "/akuntansi/akun-perkiraan" && user.menu_izin.includes("/akuntansi/akun-kas")) return true;
+    return href.startsWith("/akuntansi") && user.menu_izin.includes("/laporan");
   }
   const key = Object.keys(aksesBawaan).find((k) => href === k || href.startsWith(k + "/"));
   if (!key) return true;

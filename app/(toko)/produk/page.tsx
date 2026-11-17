@@ -6,6 +6,19 @@ import { semua } from "@/lib/api";
 import type { Produk, ProdukKemasan, KategoriProduk, Satuan } from "@/lib/types";
 import ProdukModal from "./ProdukModal";
 
+type BarisProduk = Produk & { supplierNama: string };
+
+type BarisBeli = {
+  produk_id: string;
+  pembelian: { supplier: { nama: string } | null } | null;
+};
+
+function namaSupplier(peta: Map<string, Set<string>>, id: string) {
+  const daftar = [...(peta.get(id) ?? [])].filter((nama) => nama.trim().toLowerCase() !== "tanpa supplier");
+  if (daftar.length === 0) return "-";
+  return daftar.sort((a, b) => a.localeCompare(b, "id")).join(", ");
+}
+
 function formatRp(n: number) {
   return "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
 }
@@ -21,7 +34,7 @@ function kemasanUrut(p: Produk): ProdukKemasan[] {
 }
 
 export default function ProdukPage() {
-  const [produkList, setProdukList] = useState<Produk[]>([]);
+  const [produkList, setProdukList] = useState<BarisProduk[]>([]);
   const [kategoriList, setKategoriList] = useState<KategoriProduk[]>([]);
   const [satuanList, setSatuanList] = useState<Satuan[]>([]);
   const [search, setSearch] = useState("");
@@ -33,7 +46,7 @@ export default function ProdukPage() {
   async function fetchData() {
     setLoading(true);
     const toko = supabase.schema("toko");
-    const [produk, { data: kategori }, { data: satuan }] = await Promise.all([
+    const [produk, { data: kategori }, { data: satuan }, kemasan, beli] = await Promise.all([
       semua<Produk>((dari, sampai) =>
         toko
           .from("produk")
@@ -44,26 +57,40 @@ export default function ProdukPage() {
       ),
       toko.from("kategori_produk").select("*").order("nama"),
       toko.from("satuan").select("*").order("nama"),
-    ]);
-    let kemasan: ProdukKemasan[] = [];
-    try {
-      kemasan = await semua<ProdukKemasan>((dari, sampai) =>
+      semua<ProdukKemasan>((dari, sampai) =>
         toko
           .from("produk_kemasan")
           .select("id, produk_id, satuan, harga_jual, konversi")
           .order("produk_id")
           .range(dari, sampai)
-      );
-    } catch {
-      kemasan = [];
-    }
+      ).catch(() => [] as ProdukKemasan[]),
+      semua<BarisBeli>((dari, sampai) =>
+        toko
+          .from("pembelian_item")
+          .select("produk_id,pembelian(supplier(nama))")
+          .order("id")
+          .range(dari, sampai)
+      ).catch(() => [] as BarisBeli[]),
+    ]);
     const grup = new Map<string, ProdukKemasan[]>();
     for (const baris of kemasan) {
       const daftar = grup.get(baris.produk_id) ?? [];
       daftar.push(baris);
       grup.set(baris.produk_id, daftar);
     }
-    setProdukList(produk.map((p) => ({ ...p, kemasan: grup.get(p.id) ?? [] })));
+    const petaSupplier = new Map<string, Set<string>>();
+    for (const baris of beli) {
+      const nama = baris.pembelian?.supplier?.nama?.trim();
+      if (!nama) continue;
+      const ada = petaSupplier.get(baris.produk_id) ?? new Set<string>();
+      ada.add(nama);
+      petaSupplier.set(baris.produk_id, ada);
+    }
+    setProdukList(produk.map((p) => ({
+      ...p,
+      kemasan: grup.get(p.id) ?? [],
+      supplierNama: (p.nama_supplier ?? "").trim() || namaSupplier(petaSupplier, p.id),
+    })));
     setKategoriList(kategori ?? []);
     setSatuanList(satuan ?? []);
     setLoading(false);
@@ -72,8 +99,12 @@ export default function ProdukPage() {
   useEffect(() => { fetchData(); }, []);
 
   const filtered = produkList.filter((p) => {
-    const matchSearch = p.nama.toLowerCase().includes(search.toLowerCase()) ||
-      (p.kode_sku ?? "").toLowerCase().includes(search.toLowerCase());
+    const kata = search.toLowerCase();
+    const matchSearch = p.nama.toLowerCase().includes(kata) ||
+      (p.kode_sku ?? "").toLowerCase().includes(kata) ||
+      p.supplierNama.toLowerCase().includes(kata) ||
+      (p.merek ?? "").toLowerCase().includes(kata) ||
+      (p.spek ?? "").toLowerCase().includes(kata);
     const matchKategori = filterKategori ? p.kategori_id === filterKategori : true;
     return matchSearch && matchKategori;
   });
@@ -109,7 +140,7 @@ export default function ProdukPage() {
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
-          placeholder="Cari nama / SKU..."
+          placeholder="Cari nama, SKU, atau supplier..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 sm:w-64"
@@ -143,13 +174,16 @@ export default function ProdukPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-base font-bold leading-snug text-gray-900">{p.nama}</p>
+                      {(p.merek || p.spek) && (
+                        <p className="mt-1 text-sm font-medium text-gray-800">{[p.merek, p.spek].filter(Boolean).join(" · ")}</p>
+                      )}
                       <p className="mt-1 text-sm font-semibold text-gray-800">{p.kode_sku ?? "-"}</p>
                     </div>
-                    <p className="shrink-0 text-sm font-bold text-gray-900">Stok {p.stok ?? 0}</p>
                   </div>
                   <p className="mt-2 text-sm font-medium text-gray-800">
                     {(p.kategori_produk as KategoriProduk)?.nama ?? "-"} · {satuan}
                   </p>
+                  <p className="mt-1 text-sm font-medium text-gray-800">Supplier {p.supplierNama}</p>
                   <div className="mt-2 text-sm font-semibold text-gray-900">
                     {kemasan.length > 1 ? (
                       <div className="space-y-1">
@@ -189,9 +223,9 @@ export default function ProdukPage() {
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-gray-900">Kode SKU</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-900">Nama Produk</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Supplier</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-900">Kategori</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-900">Satuan</th>
-                  <th className="px-4 py-3 text-right font-semibold text-gray-900">Stok</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-900">Harga Jual</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-900">Varian</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-900">Aksi</th>
@@ -203,7 +237,13 @@ export default function ProdukPage() {
                   return (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-mono text-sm font-medium text-gray-800">{p.kode_sku ?? "-"}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{p.nama}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {p.nama}
+                        {(p.merek || p.spek) && (
+                          <p className="mt-0.5 text-xs font-medium text-gray-600">{[p.merek, p.spek].filter(Boolean).join(" · ")}</p>
+                        )}
+                      </td>
+                      <td className="max-w-[16rem] px-4 py-3 text-gray-800">{p.supplierNama}</td>
                       <td className="px-4 py-3 text-gray-800">
                         {(p.kategori_produk as KategoriProduk)?.nama ?? "-"}
                       </td>
@@ -212,7 +252,6 @@ export default function ProdukPage() {
                           ? kemasan.map((k) => k.satuan).join(", ")
                           : (p.satuan as Satuan)?.nama ?? "-"}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">{p.stok ?? 0}</td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
                         {kemasan.length > 1 ? (
                           <div className="space-y-0.5">

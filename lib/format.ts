@@ -49,6 +49,9 @@ export function pesanError(message: string) {
   if (/PGRST106|Invalid schema|schema must be/i.test(message)) {
     return "Skema toko belum dibuka di Supabase. Jalankan file supabase/toko.sql, lalu tambahkan toko di Exposed schemas.";
   }
+  if (/simpan_pesanan_penjualan|jadi_penjualan_dari_so|batal_pesanan_penjualan|pesanan_penjualan/i.test(message) && /does not exist|schema cache|42883|42P01|PGRST202|PGRST204|PGRST205/i.test(message)) {
+    return "Tabel pesanan penjualan belum ada. Jalankan file supabase/pesanan-penjualan.sql di SQL Editor proyek bekon-pro.";
+  }
   if (/daftar_pesanan_toko_bekon|sahkan_pesanan_toko_bekon|kembalikan_pesanan_toko_bekon|daftar_katalog_toko_bekon|rincian_po_toko_bekon/i.test(message)) {
     return "Fungsi pesanan Bekon belum dipasang. Jalankan file supabase/pesanan-bekon.sql di SQL Editor proyek bekon-pro.";
   }
@@ -61,8 +64,17 @@ export function pesanError(message: string) {
   if (/ubah_penjualan/i.test(message) && /does not exist|schema cache|42883|PGRST202/i.test(message)) {
     return "Fungsi ubah nota belum dipasang. Jalankan file supabase/ubah-nota.sql di SQL Editor proyek bekon-pro.";
   }
+  if (/ubah_pembelian|ubah_retur_penjualan|ubah_retur_pembelian/i.test(message) && /does not exist|schema cache|42883|PGRST202/i.test(message)) {
+    return "Fungsi ubah pembelian dan retur belum dipasang. Jalankan file supabase/ubah-pembelian-retur.sql di SQL Editor proyek bekon-pro.";
+  }
   if (/catat_pelunasan_banyak|atur_jatuh_tempo|jatuh_tempo|jurnal_baris/i.test(message)) {
     return "Jurnal pelunasan belum dipasang. Jalankan file supabase/bayar-jurnal.sql di SQL Editor proyek bekon-pro.";
+  }
+  if (/catat_penyesuaian_stok|penyesuaian_stok/i.test(message) && /does not exist|schema cache|42883|42P01|PGRST202|PGRST205|PGRST204/i.test(message)) {
+    return "Penyesuaian stok belum dipasang. Jalankan file supabase/persediaan.sql di SQL Editor Supabase, lalu simpan lagi.";
+  }
+  if (/akun_perkiraan/i.test(message) && /does not exist|schema cache|42P01|PGRST205|PGRST204/i.test(message)) {
+    return "Tabel akun perkiraan belum ada. Jalankan file supabase/akun-perkiraan.sql di SQL Editor Supabase, lalu buka halaman ini lagi.";
   }
   if (/relation .* does not exist|42P01/i.test(message)) {
     return "Tabel toko belum ada. Jalankan file supabase/toko.sql di SQL Editor project bekon-pro.";
