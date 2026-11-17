@@ -90,6 +90,10 @@ textarea::placeholder {
   }
 }
 
+.rekap-cetak {
+  display: none;
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -97,7 +101,36 @@ textarea::placeholder {
   aside {
     display: none !important;
   }
+  html,
+  body,
+  .h-dvh,
+  .h-full,
+  .max-h-dvh {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .overflow-hidden,
+  .overflow-y-auto,
   main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     padding: 0 !important;
+  }
+  main table {
+    min-width: 0 !important;
+  }
+  .rekap-cetak {
+    display: block !important;
+  }
+  .rekap-cetak tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .rekap-cetak h2 {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }

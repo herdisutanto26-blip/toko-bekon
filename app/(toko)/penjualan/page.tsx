@@ -39,6 +39,64 @@ function dasarPenjualan(buku: Buku, dari: string, sampai: string) {
   return q.order("tanggal", { ascending: false }).order("id");
 }
 
+function returNota(row: Row) {
+  return (row.retur_penjualan ?? []).reduce((s, item) => s + Number(item.total), 0);
+}
+
+function sisaNota(row: Row) {
+  return sisaTagihan(row.grand_total, row.dibayar, returNota(row));
+}
+
+function tanggalPanjang(iso: string) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  });
+}
+
+function teksPeriode(dari: string, sampai: string) {
+  if (dari && sampai && dari === sampai) return tanggalPanjang(dari);
+  if (dari && sampai) return `${tanggalPanjang(dari)} – ${tanggalPanjang(sampai)}`;
+  if (dari) return `Mulai ${tanggalPanjang(dari)}`;
+  if (sampai) return `Sampai ${tanggalPanjang(sampai)}`;
+  return "Nota terbaru yang sedang tampil";
+}
+
+function judulBerkas(buku: Buku, dari: string, sampai: string) {
+  const bukuLabel = buku === "bekon" ? "Bekon" : "Umum";
+  const rentang = dari || sampai ? `${dari || "..."} sampai ${sampai || "..."}` : "terbaru";
+  return `Rekap Penjualan ${bukuLabel} ${rentang}`;
+}
+
+type GrupBekon = { kunci: string; judul: string; grup: Row[]; total: number; sisa: number };
+
+function kelompokBekon(rows: Row[]): GrupBekon[] {
+  const urutan: string[] = [];
+  const map = new Map<string, Row[]>();
+  for (const row of rows) {
+    const kunci = row.kode_proyek?.trim() || "Tanpa proyek";
+    const ada = map.get(kunci);
+    if (ada) ada.push(row);
+    else {
+      urutan.push(kunci);
+      map.set(kunci, [row]);
+    }
+  }
+  return urutan.map((kunci) => {
+    const grup = map.get(kunci) ?? [];
+    const pemilik = grup.find((row) => row.nama_pemilik)?.nama_pemilik;
+    return {
+      kunci,
+      judul: labelProyek(kunci === "Tanpa proyek" ? "" : kunci, pemilik) || "Tanpa proyek",
+      grup,
+      total: grup.reduce((s, row) => s + Number(row.grand_total), 0),
+      sisa: grup.reduce((s, row) => s + sisaNota(row), 0),
+    };
+  });
+}
+
 function potong<T>(daftar: T[], ukuran: number) {
   const hasil: T[][] = [];
   for (let i = 0; i < daftar.length; i += ukuran) hasil.push(daftar.slice(i, i + ukuran));
@@ -105,6 +163,23 @@ export default function PenjualanPage() {
   }, []);
 
   useEffect(() => {
+    const lama = document.title;
+    const siapkan = () => {
+      document.title = judulBerkas(buku, dari, sampai);
+    };
+    const pulih = () => {
+      document.title = lama;
+    };
+    window.addEventListener("beforeprint", siapkan);
+    window.addEventListener("afterprint", pulih);
+    return () => {
+      window.removeEventListener("beforeprint", siapkan);
+      window.removeEventListener("afterprint", pulih);
+      document.title = lama;
+    };
+  }, [buku, dari, sampai]);
+
+  useEffect(() => {
     let batal = false;
     const timer = setTimeout(() => {
       setMemuat(true);
@@ -142,6 +217,8 @@ export default function PenjualanPage() {
 
   return (
     <div>
+      <style>{`@media print { @page { size: A4; margin: 12mm; } }`}</style>
+      <div className="no-print">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-800">Penjualan</h1>
         {buku === "umum" && (
@@ -170,8 +247,17 @@ export default function PenjualanPage() {
           className="w-72 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
         <SaringTanggal dari={dari} sampai={sampai} onDari={setDari} onSampai={setSampai} />
+        <button
+          type="button"
+          onClick={() => window.print()}
+          disabled={memuat || rows.length === 0}
+          title="Membuka dialog cetak. Pilih Simpan sebagai PDF untuk menyimpan file."
+          className="ml-auto rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Cetak / PDF
+        </button>
       </div>
-      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
       {memuat ? (
         <p className="text-sm text-gray-500 mb-4">Memuat data...</p>
       ) : (
@@ -253,6 +339,18 @@ export default function PenjualanPage() {
           </div>
         </div>
       )}
+      </div>
+      {!memuat && rows.length > 0 && (
+        <RekapCetak
+          buku={buku}
+          rows={rows}
+          daftar={daftar}
+          dari={dari}
+          sampai={sampai}
+          cari={kata}
+          terpotong={jumlah >= 500}
+        />
+      )}
     </div>
   );
 }
@@ -306,50 +404,125 @@ function DaftarBekon({ rows, onPilih, kosong }: { rows: Row[]; onPilih: (id: str
   if (rows.length === 0) {
     return <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">{kosong ?? "Belum ada nota penjualan Bekon"}</div>;
   }
-  const urutan: string[] = [];
-  const map = new Map<string, Row[]>();
-  for (const row of rows) {
-    const kunci = row.kode_proyek?.trim() || "Tanpa proyek";
-    const ada = map.get(kunci);
-    if (ada) ada.push(row);
-    else {
-      urutan.push(kunci);
-      map.set(kunci, [row]);
-    }
-  }
   return (
     <div className="space-y-6">
-      {urutan.map((kunci) => {
-        const grup = map.get(kunci) ?? [];
-        const pemilik = grup.find((row) => row.nama_pemilik)?.nama_pemilik;
-        const total = grup.reduce((s, row) => s + Number(row.grand_total), 0);
-        const sisa = grup.reduce(
-          (s, row) => s + sisaTagihan(row.grand_total, row.dibayar, (row.retur_penjualan ?? []).reduce((a, item) => a + Number(item.total), 0)),
-          0
-        );
-        return (
-          <section key={kunci}>
-            <div className="mb-2 flex items-baseline justify-between gap-3">
-              <h2 className="font-semibold text-gray-900">{labelProyek(kunci === "Tanpa proyek" ? "" : kunci, pemilik) || "Tanpa proyek"}</h2>
-              <p className="text-sm text-gray-500">{grup.length} nota · {formatRp(total)} · sisa {formatRp(sisa)}</p>
-            </div>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              {grup.map((row) => {
-                const sisaNota = sisaTagihan(row.grand_total, row.dibayar, (row.retur_penjualan ?? []).reduce((a, item) => a + Number(item.total), 0));
-                return (
-                  <button key={row.id} type="button" onClick={() => onPilih(row.id)} className="flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm first:border-t-0 hover:bg-gray-50">
-                    <span>
-                      <span className="font-medium text-merek-biru-tua">{row.nomor_nota}</span>
-                      <span className="ml-2 text-gray-500">{row.tanggal}{row.jatuh_tempo ? ` · tempo ${row.jatuh_tempo}` : ""}</span>
-                    </span>
-                    <span className="text-gray-800">{formatRp(row.grand_total)} · sisa {formatRp(sisaNota)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+      {kelompokBekon(rows).map(({ kunci, judul, grup, total, sisa }) => (
+        <section key={kunci}>
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <h2 className="font-semibold text-gray-900">{judul}</h2>
+            <p className="text-sm text-gray-500">{grup.length} nota · {formatRp(total)} · sisa {formatRp(sisa)}</p>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            {grup.map((row) => (
+              <button key={row.id} type="button" onClick={() => onPilih(row.id)} className="flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm first:border-t-0 hover:bg-gray-50">
+                <span>
+                  <span className="font-medium text-merek-biru-tua">{row.nomor_nota}</span>
+                  <span className="ml-2 text-gray-500">{row.tanggal}{row.jatuh_tempo ? ` · tempo ${row.jatuh_tempo}` : ""}</span>
+                </span>
+                <span className="text-gray-800">{formatRp(row.grand_total)} · sisa {formatRp(sisaNota(row))}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
+  );
+}
+
+function RekapCetak({
+  buku,
+  rows,
+  daftar,
+  dari,
+  sampai,
+  cari,
+  terpotong,
+}: {
+  buku: Buku;
+  rows: Row[];
+  daftar: { id: string; nomor: string; tanggal: string; pihak: string; total: number; sisa: number; status: string }[];
+  dari: string;
+  sampai: string;
+  cari: string;
+  terpotong: boolean;
+}) {
+  const judul = buku === "bekon" ? "Rekap Penjualan Bekon" : "Rekap Penjualan Umum";
+  const total = buku === "bekon"
+    ? rows.reduce((s, row) => s + Number(row.grand_total), 0)
+    : daftar.reduce((s, row) => s + row.total, 0);
+  const sisa = buku === "bekon"
+    ? rows.reduce((s, row) => s + sisaNota(row), 0)
+    : daftar.reduce((s, row) => s + row.sisa, 0);
+  const jumlahNota = buku === "bekon" ? rows.length : daftar.length;
+  return (
+    <article className="rekap-cetak text-gray-900">
+      <header className="mb-4 border-b border-gray-400 pb-3">
+        <p className="text-sm font-semibold">Toko Bekon</p>
+        <h1 className="text-xl font-bold">{judul}</h1>
+        <p className="mt-1 text-sm">Periode: {teksPeriode(dari, sampai)}</p>
+        {cari && <p className="text-sm">Pencarian: {cari}</p>}
+        <p className="text-sm">{jumlahNota} nota · {formatRp(total)} · sisa {formatRp(sisa)}</p>
+        {terpotong && <p className="text-sm">Daftar dipotong pada {rows.length} nota pertama.</p>}
+      </header>
+      {buku === "bekon" ? (
+        <div className="space-y-4">
+          {kelompokBekon(rows).map(({ kunci, judul: nama, grup, total: jumlahGrup, sisa: sisaGrup }) => (
+            <section key={kunci} className="rekap-grup">
+              <div className="mb-1 flex items-baseline justify-between gap-3">
+                <h2 className="font-semibold">{nama}</h2>
+                <p className="text-sm">{grup.length} nota · {formatRp(jumlahGrup)} · sisa {formatRp(sisaGrup)}</p>
+              </div>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-y border-gray-400 text-left">
+                    <th className="py-1 pr-3 font-medium">Nomor</th>
+                    <th className="py-1 pr-3 font-medium">Tanggal</th>
+                    <th className="py-1 pr-3 font-medium">Jatuh tempo</th>
+                    <th className="py-1 pr-3 text-right font-medium">Total</th>
+                    <th className="py-1 text-right font-medium">Sisa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grup.map((row) => (
+                    <tr key={row.id} className="border-b border-gray-200">
+                      <td className="py-1 pr-3">{row.nomor_nota}</td>
+                      <td className="py-1 pr-3">{row.tanggal}</td>
+                      <td className="py-1 pr-3">{row.jatuh_tempo ?? "-"}</td>
+                      <td className="py-1 pr-3 text-right">{formatRp(row.grand_total)}</td>
+                      <td className="py-1 text-right">{formatRp(sisaNota(row))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-y border-gray-400 text-left">
+              <th className="py-1 pr-3 font-medium">Nomor</th>
+              <th className="py-1 pr-3 font-medium">Tanggal</th>
+              <th className="py-1 pr-3 font-medium">Pihak</th>
+              <th className="py-1 pr-3 text-right font-medium">Total</th>
+              <th className="py-1 pr-3 text-right font-medium">Sisa</th>
+              <th className="py-1 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {daftar.map((row) => (
+              <tr key={row.id} className="border-b border-gray-200">
+                <td className="py-1 pr-3">{row.nomor}</td>
+                <td className="py-1 pr-3">{row.tanggal}</td>
+                <td className="py-1 pr-3">{row.pihak}</td>
+                <td className="py-1 pr-3 text-right">{formatRp(row.total)}</td>
+                <td className="py-1 pr-3 text-right">{formatRp(row.sisa)}</td>
+                <td className="py-1 capitalize">{row.status.replace("_", " ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </article>
   );
 }
