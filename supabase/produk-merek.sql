@@ -17,10 +17,10 @@ where nama_supplier is null
 
 update toko.produk
 set spek = nullif(
-  btrim(both ' .' from regexp_replace(
+  btrim(regexp_replace(
     regexp_replace(coalesce(keterangan, ''), '(?i)\s*merek\s*:\s*[^.\n]+\.?', '', 'g'),
     '(?i)\s*supplier\s*:\s*[^.\n]+\.?', '', 'g'
-  )),
+  ), ' .'),
   ''
 )
 where spek is null
@@ -32,9 +32,9 @@ set keterangan = null
 where keterangan is not null
   and keterangan ~* '(merek|supplier)\s*:'
   and nullif(
-    btrim(both ' .' from regexp_replace(
+    btrim(regexp_replace(
       regexp_replace(keterangan, '(?i)\s*merek\s*:\s*[^.\n]+\.?', '', 'g'),
       '(?i)\s*supplier\s*:\s*[^.\n]+\.?', '', 'g'
-    )),
+    ), ' .'),
     ''
   ) is null;
